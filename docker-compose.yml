@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: loadlab-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    container_name: loadlab-backend
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: loadlab-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana-oss
+    container_name: loadlab-grafana
+    ports:
+      - "3003:3000"
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: loadlab-node-exporter
+    ports:
+      - "9100:9100"
