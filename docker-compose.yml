@@ -31,9 +31,14 @@ services:
     container_name: loadlab-grafana
     ports:
       - "3003:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
 
   node-exporter:
     image: prom/node-exporter
     container_name: loadlab-node-exporter
     ports:
       - "9100:9100"
+
+volumes:
+  grafana-data:
