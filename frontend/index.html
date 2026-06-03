@@ -1,842 +1,479 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LoadLab — DevOps Learning Environment</title>
-  <style>
-    /* ── CSS Custom Properties ── */
-    :root {
-      --bg:           #0B1220;
-      --card:         #111827;
-      --border:       #1F2937;
-      --primary:      #3B82F6;
-      --success:      #22C55E;
-      --warning:      #F59E0B;
-      --danger:       #EF4444;
-      --text:         #F9FAFB;
-      --text-secondary: #9CA3AF;
-      --font-sans:    system-ui, -apple-system, sans-serif;
-      --font-mono:    'Courier New', monospace;
-      --radius:       8px;
-      --transition:   0.2s ease;
-    }
-
-    /* ── Reset & Base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-sans);
-      font-size: 16px;
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-    a { color: var(--primary); text-decoration: none; }
-    button { cursor: pointer; font-family: var(--font-sans); }
-
-    /* ── Layout Wrapper ── */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* ── Topbar ── */
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-    }
-    .topbar-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 56px;
-    }
-    .topbar-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .topbar-logo span.logo-text {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-      letter-spacing: -0.02em;
-    }
-    .topbar-logo span.logo-badge {
-      background: var(--border);
-      color: var(--text-secondary);
-      font-size: 0.7rem;
-      padding: 2px 7px;
-      border-radius: 9999px;
-      font-weight: 500;
-    }
-    .topbar-clock {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      letter-spacing: 0.05em;
-    }
-
-    /* ── Sections ── */
-    section { padding: 56px 0; }
-    section + section { border-top: 1px solid var(--border); }
-    .section-title {
-      font-size: 1.35rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 28px;
-      letter-spacing: -0.01em;
-    }
-
-    /* ── Hero ── */
-    .hero { padding: 72px 0 56px; text-align: left; }
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.04em;
-      line-height: 1.1;
-    }
-    .hero h1 span { color: var(--primary); }
-    .hero h2 {
-      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-      font-weight: 400;
-      color: var(--text-secondary);
-      margin-top: 8px;
-      letter-spacing: -0.01em;
-    }
-    .hero p {
-      color: var(--text-secondary);
-      max-width: 560px;
-      margin-top: 16px;
-      font-size: 1rem;
-    }
-    .hero-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 28px;
-    }
-    .hero-badge {
-      background: var(--border);
-      border: 1px solid var(--primary);
-      color: var(--text-secondary);
-      font-size: 0.78rem;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      letter-spacing: 0.02em;
-      transition: color var(--transition), background var(--transition);
-    }
-    .hero-badge:hover { color: var(--text); background: #2a3a52; }
-
-    /* ── Card ── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      transition: border-color var(--transition), transform var(--transition);
-    }
-    .card:hover {
-      border-color: var(--primary);
-      transform: translateY(-2px);
-    }
-
-    /* ── Status Cards Grid ── */
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-    @media (max-width: 768px) {
-      .status-grid { grid-template-columns: 1fr; }
-    }
-
-    /* ── Pulsing Dot ── */
-    @keyframes pulse {
-      0%   { transform: scale(1);   opacity: 1;   }
-      50%  { transform: scale(1.4); opacity: 0.5; }
-      100% { transform: scale(1);   opacity: 1;   }
-    }
-    .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      animation: pulse 1.8s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-    .dot-green  { background: var(--success); }
-    .dot-orange { background: var(--warning); }
-    .dot-red    { background: var(--danger); }
-
-    .status-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .status-card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .status-card-subtitle {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-    .status-value {
-      font-size: 0.9rem;
-      font-weight: 500;
-      margin-top: 12px;
-    }
-    .status-healthy   { color: var(--success); }
-    .status-warning   { color: var(--warning); }
-    .status-error     { color: var(--danger); }
-    .status-checking  { color: var(--text-secondary); }
-    .response-time {
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      font-family: var(--font-mono);
-    }
-
-    /* ── Small Button (used inside status cards) ── */
-    .btn-small {
-      display: inline-block;
-      margin-top: 14px;
-      padding: 5px 14px;
-      font-size: 0.82rem;
-      font-weight: 500;
-      border-radius: var(--radius);
-      border: 1px solid var(--primary);
-      background: transparent;
-      color: var(--primary);
-      transition: background var(--transition), color var(--transition);
-    }
-    .btn-small:hover { background: var(--primary); color: #fff; }
-
-    /* ── Endpoint Cards Grid ── */
-    .endpoint-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-    }
-    @media (max-width: 1024px) {
-      .endpoint-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 540px) {
-      .endpoint-grid { grid-template-columns: 1fr; }
-    }
-
-    .endpoint-icon {
-      font-size: 1.8rem;
-      margin-bottom: 12px;
-      line-height: 1;
-    }
-    .endpoint-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-    .endpoint-desc {
-      font-size: 0.83rem;
-      color: var(--text-secondary);
-      margin-bottom: 14px;
-      line-height: 1.5;
-    }
-    .endpoint-badge {
-      display: inline-block;
-      background: #0f1a2e;
-      border: 1px solid var(--border);
-      color: var(--primary);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 3px 10px;
-      border-radius: 5px;
-      margin-bottom: 16px;
-    }
-    .btn-execute {
-      width: 100%;
-      padding: 8px 0;
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      border-radius: var(--radius);
-      font-size: 0.88rem;
-      font-weight: 500;
-      transition: background var(--transition), color var(--transition);
-      position: relative;
-    }
-    .btn-execute:hover:not(:disabled) { background: var(--primary); color: #fff; }
-    .btn-execute:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    /* ── Spinner (inside button) ── */
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .spinner {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border: 2px solid currentColor;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-    }
-
-    /* ── Output Console ── */
-    .console-wrap {
-      margin-top: 28px;
-    }
-    .console-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .console-header span {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .btn-clear {
-      padding: 4px 12px;
-      font-size: 0.78rem;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-secondary);
-      border-radius: var(--radius);
-      transition: border-color var(--transition), color var(--transition);
-    }
-    .btn-clear:hover { border-color: var(--danger); color: var(--danger); }
-
-    #console-output {
-      background: #000;
-      color: var(--success);
-      font-family: var(--font-mono);
-      font-size: 0.85em;
-      padding: 16px;
-      min-height: 220px;
-      max-height: 400px;
-      overflow-y: auto;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    #console-output .log-error { color: var(--danger); }
-    #console-output .log-info  { color: var(--text-secondary); }
-    #console-output .log-normal{ color: var(--success); }
-
-    /* Console scrollbar */
-    #console-output::-webkit-scrollbar { width: 5px; }
-    #console-output::-webkit-scrollbar-track { background: #111; }
-    #console-output::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-
-    /* ── Monitoring Cards ── */
-    .monitoring-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    @media (max-width: 640px) {
-      .monitoring-grid { grid-template-columns: 1fr; }
-    }
-    .monitoring-card-icon {
-      font-size: 2.5rem;
-      margin-bottom: 16px;
-      line-height: 1;
-    }
-    .monitoring-card-title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 10px;
-    }
-    .monitoring-card-desc {
-      font-size: 0.88rem;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-    .monitoring-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 20px;
-    }
-    .monitoring-tag {
-      background: var(--border);
-      color: var(--text-secondary);
-      font-size: 0.73rem;
-      padding: 3px 10px;
-      border-radius: 9999px;
-    }
-    .btn-primary {
-      display: inline-block;
-      padding: 9px 20px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: opacity var(--transition), transform var(--transition);
-    }
-    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
-
-    /* ── System Information ── */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0 40px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--card);
-      overflow: hidden;
-    }
-    @media (max-width: 640px) {
-      .info-grid { grid-template-columns: 1fr; }
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 24px;
-      border-bottom: 1px solid var(--border);
-      gap: 16px;
-    }
-    .info-grid > .info-row:nth-last-child(-n+2) { border-bottom: none; }
-    @media (max-width: 640px) {
-      .info-grid > .info-row:last-child { border-bottom: none; }
-      .info-grid > .info-row:nth-last-child(2) { border-bottom: 1px solid var(--border); }
-    }
-    .info-label {
-      font-size: 0.87rem;
-      color: var(--text-secondary);
-      flex-shrink: 0;
-    }
-    .info-value {
-      font-size: 0.87rem;
-      color: var(--text);
-      font-weight: 500;
-      text-align: right;
-    }
-
-    /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 24px;
-      text-align: center;
-    }
-    footer p {
-      color: var(--text-secondary);
-      font-size: 0.82rem;
-      line-height: 1.8;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load Testing Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .metric {
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            color: #764ba2;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .controls h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            display: block;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        canvas {
+            max-width: 100%;
+        }
+        
+        .response-data {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #333;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
 </head>
 <body>
-
-  <!-- ══════════════════════════════════════
-       1. TOPBAR
-  ══════════════════════════════════════ -->
-  <header class="topbar">
-    <div class="container topbar-inner">
-      <div class="topbar-logo">
-        <span class="logo-text">LoadLab</span>
-        <span class="logo-badge">v1.0</span>
-      </div>
-      <div class="topbar-clock" id="clock">00:00:00</div>
+    <div class="container">
+        <header>
+            <h1>⚡ Load Testing Dashboard</h1>
+            <p>Monitor and manage your load testing operations</p>
+        </header>
+        
+        <div class="controls">
+            <h2>Test Configuration</h2>
+            <div class="form-group">
+                <label for="testUrl">Target URL:</label>
+                <input type="text" id="testUrl" placeholder="http://example.com" value="http://localhost:3000">
+            </div>
+            <div class="form-group">
+                <label for="numRequests">Number of Requests:</label>
+                <input type="number" id="numRequests" min="1" max="10000" value="100">
+            </div>
+            <div class="form-group">
+                <label for="concurrency">Concurrency Level:</label>
+                <input type="number" id="concurrency" min="1" max="1000" value="10">
+            </div>
+            <div class="form-group">
+                <label for="timeout">Timeout (seconds):</label>
+                <input type="number" id="timeout" min="1" max="300" value="30">
+            </div>
+            <div class="button-group">
+                <button onclick="startTest()">▶ Start Load Test</button>
+                <button onclick="stopTest()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">⏹ Stop Test</button>
+                <button onclick="clearResults()" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🔄 Clear Results</button>
+            </div>
+            <div class="status" id="status"></div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2>Overall Metrics</h2>
+                <div class="metric">
+                    <span class="metric-label">Total Requests:</span>
+                    <span class="metric-value" id="totalRequests">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Completed:</span>
+                    <span class="metric-value" id="completedRequests">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Failed:</span>
+                    <span class="metric-value" id="failedRequests">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Success Rate:</span>
+                    <span class="metric-value" id="successRate">0%</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Response Times</h2>
+                <div class="metric">
+                    <span class="metric-label">Average:</span>
+                    <span class="metric-value" id="avgResponse">0ms</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Min:</span>
+                    <span class="metric-value" id="minResponse">0ms</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Max:</span>
+                    <span class="metric-value" id="maxResponse">0ms</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">P95:</span>
+                    <span class="metric-value" id="p95Response">0ms</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Performance Stats</h2>
+                <div class="metric">
+                    <span class="metric-label">Requests/sec:</span>
+                    <span class="metric-value" id="rps">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Test Duration:</span>
+                    <span class="metric-value" id="duration">0s</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Data:</span>
+                    <span class="metric-value" id="totalData">0 KB</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Status:</span>
+                    <span class="metric-value" id="testStatus">Idle</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Test Results</h2>
+            <div class="response-data" id="resultsData">No test results yet. Start a load test to see results.</div>
+        </div>
     </div>
-  </header>
-
-  <main>
-    <!-- ══════════════════════════════════════
-         2. HERO
-    ══════════════════════════════════════ -->
-    <section class="hero">
-      <div class="container">
-        <h1><span>Load</span>Lab</h1>
-        <h2>DevOps Learning Environment</h2>
-        <p>Containerized load testing and monitoring platform running on AWS EC2.</p>
-        <div class="hero-badges">
-          <span class="hero-badge">AWS EC2</span>
-          <span class="hero-badge">Docker</span>
-          <span class="hero-badge">NGINX</span>
-          <span class="hero-badge">Node.js</span>
-          <span class="hero-badge">Prometheus</span>
-          <span class="hero-badge">Grafana</span>
-          <span class="hero-badge">k6</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         3. SYSTEM STATUS
-    ══════════════════════════════════════ -->
-    <section>
-      <div class="container">
-        <h2 class="section-title">System Status</h2>
-        <div class="status-grid">
-
-          <!-- Card 1: Backend API -->
-          <div class="card">
-            <div class="status-header">
-              <span class="dot dot-green" id="api-dot"></span>
-              <div>
-                <div class="status-card-title">Backend API</div>
-                <div class="status-card-subtitle">Node.js / Express</div>
-              </div>
-            </div>
-            <div class="status-value status-checking" id="api-status">Checking...</div>
-            <div class="response-time" id="api-response-time"></div>
-          </div>
-
-          <!-- Card 2: Prometheus -->
-          <div class="card">
-            <div class="status-header">
-              <span class="dot dot-orange" id="prom-dot"></span>
-              <div>
-                <div class="status-card-title">Prometheus</div>
-                <div class="status-card-subtitle">Metrics Collection</div>
-              </div>
-            </div>
-            <div class="status-value status-warning">Online</div>
-            <button class="btn-small" id="btn-open-prom" onclick="openService(9090)">Open →</button>
-          </div>
-
-          <!-- Card 3: Grafana -->
-          <div class="card">
-            <div class="status-header">
-              <span class="dot dot-orange" id="graf-dot"></span>
-              <div>
-                <div class="status-card-title">Grafana</div>
-                <div class="status-card-subtitle">Metrics Visualization</div>
-              </div>
-            </div>
-            <div class="status-value status-warning">Online</div>
-            <button class="btn-small" id="btn-open-graf" onclick="openService(3003)">Open →</button>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         4. ENDPOINT TESTING
-    ══════════════════════════════════════ -->
-    <section>
-      <div class="container">
-        <h2 class="section-title">Endpoint Testing</h2>
-        <div class="endpoint-grid">
-
-          <!-- Health Check -->
-          <div class="card">
-            <div class="endpoint-icon">&#x2705;</div>
-            <div class="endpoint-title">Health Check</div>
-            <div class="endpoint-desc">Returns server status and uptime confirmation.</div>
-            <div class="endpoint-badge">GET /api/health</div>
-            <button class="btn-execute" id="btn-health" onclick="executeEndpoint('/api/health', 'GET /api/health', 'btn-health')">Execute</button>
-          </div>
-
-          <!-- CPU Stress -->
-          <div class="card">
-            <div class="endpoint-icon">&#x1F525;</div>
-            <div class="endpoint-title">CPU Stress</div>
-            <div class="endpoint-desc">Counts primes to 1,000,000. Pegs a CPU core.</div>
-            <div class="endpoint-badge">GET /api/cpu</div>
-            <button class="btn-execute" id="btn-cpu" onclick="executeEndpoint('/api/cpu', 'GET /api/cpu', 'btn-cpu')">Execute</button>
-          </div>
-
-          <!-- Memory Spike -->
-          <div class="card">
-            <div class="endpoint-icon">&#x1F4BE;</div>
-            <div class="endpoint-title">Memory Spike</div>
-            <div class="endpoint-desc">Allocates 1,000,000 objects. Spikes heap usage.</div>
-            <div class="endpoint-badge">GET /api/memory</div>
-            <button class="btn-execute" id="btn-memory" onclick="executeEndpoint('/api/memory', 'GET /api/memory', 'btn-memory')">Execute</button>
-          </div>
-
-          <!-- Slow Response -->
-          <div class="card">
-            <div class="endpoint-icon">&#x1F422;</div>
-            <div class="endpoint-title">Slow Response</div>
-            <div class="endpoint-desc">Artificial 3s delay. Simulates a slow upstream.</div>
-            <div class="endpoint-badge">GET /api/slow</div>
-            <button class="btn-execute" id="btn-slow" onclick="executeEndpoint('/api/slow', 'GET /api/slow', 'btn-slow')">Execute</button>
-          </div>
-
-        </div>
-
-        <!-- ── Output Console ── -->
-        <div class="console-wrap">
-          <div class="console-header">
-            <span>System Output</span>
-            <button class="btn-clear" onclick="clearConsole()">Clear</button>
-          </div>
-          <div id="console-output"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         6. MONITORING
-    ══════════════════════════════════════ -->
-    <section>
-      <div class="container">
-        <h2 class="section-title">Monitoring</h2>
-        <div class="monitoring-grid">
-
-          <!-- Grafana -->
-          <div class="card">
-            <div class="monitoring-card-icon">&#x1F4CA;</div>
-            <div class="monitoring-card-title">Grafana Dashboard</div>
-            <div class="monitoring-card-desc">View infrastructure metrics, request rates, latency percentiles, and system performance dashboards.</div>
-            <div class="monitoring-tags">
-              <span class="monitoring-tag">Metrics</span>
-              <span class="monitoring-tag">Dashboards</span>
-              <span class="monitoring-tag">Visualization</span>
-            </div>
-            <button class="btn-primary" onclick="openService(3003)">Open Grafana →</button>
-          </div>
-
-          <!-- Prometheus -->
-          <div class="card">
-            <div class="monitoring-card-icon">&#x1F52D;</div>
-            <div class="monitoring-card-title">Prometheus</div>
-            <div class="monitoring-card-desc">Inspect raw metrics, run PromQL queries, and explore time-series data from the backend and node-exporter.</div>
-            <div class="monitoring-tags">
-              <span class="monitoring-tag">PromQL</span>
-              <span class="monitoring-tag">Scraping</span>
-              <span class="monitoring-tag">Alerting</span>
-            </div>
-            <button class="btn-primary" onclick="openService(9090)">Open Prometheus →</button>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         7. SYSTEM INFORMATION
-    ══════════════════════════════════════ -->
-    <section>
-      <div class="container">
-        <h2 class="section-title">System Information</h2>
-        <div class="info-grid">
-          <div class="info-row">
-            <span class="info-label">Infrastructure</span>
-            <span class="info-value">AWS EC2</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Web Server</span>
-            <span class="info-value">NGINX</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Backend</span>
-            <span class="info-value">Node.js + Express</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Monitoring</span>
-            <span class="info-value">Prometheus + Grafana</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Load Testing</span>
-            <span class="info-value">k6</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Environment</span>
-            <span class="info-value">Development</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Metrics Endpoint</span>
-            <span class="info-value">/api/metrics</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Scrape Interval</span>
-            <span class="info-value">5 seconds</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ══════════════════════════════════════
-       8. FOOTER
-  ══════════════════════════════════════ -->
-  <footer>
-    <p>LoadLab — DevOps Learning Environment</p>
-    <p>Built for Monitoring, Load Testing and Infrastructure Learning</p>
-  </footer>
-
-  <!-- ══════════════════════════════════════
-       JAVASCRIPT
-  ══════════════════════════════════════ -->
-  <script>
-    /* ── Config ── */
-    const SERVER_IP = window.location.hostname;
-
-    /* ── Utility: timestamp string HH:MM:SS ── */
-    function timestamp() {
-      const now = new Date();
-      return [
-        String(now.getHours()).padStart(2, '0'),
-        String(now.getMinutes()).padStart(2, '0'),
-        String(now.getSeconds()).padStart(2, '0')
-      ].join(':');
-    }
-
-    /* ── Live Clock ── */
-    function updateClock() {
-      const el = document.getElementById('clock');
-      if (el) el.textContent = timestamp();
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    /* ── Console Logger ── */
-    function logToConsole(message, type) {
-      const output = document.getElementById('console-output');
-      if (!output) return;
-
-      const line = document.createElement('div');
-      const ts = timestamp();
-      line.textContent = '[' + ts + '] ' + message;
-
-      if (type === 'error') {
-        line.className = 'log-error';
-      } else if (type === 'info') {
-        line.className = 'log-info';
-      } else {
-        line.className = 'log-normal';
-      }
-
-      output.appendChild(line);
-      output.scrollTop = output.scrollHeight;
-    }
-
-    function clearConsole() {
-      const output = document.getElementById('console-output');
-      if (output) output.innerHTML = '';
-      logToConsole('Console cleared.', 'info');
-    }
-
-    /* ── Open external service ── */
-    function openService(port) {
-      window.open('http://' + SERVER_IP + ':' + port, '_blank');
-    }
-
-    /* ── Health Check (used on load + auto-refresh) ── */
-    async function runHealthCheck() {
-      const statusEl = document.getElementById('api-status');
-      const rtEl     = document.getElementById('api-response-time');
-      const dot      = document.getElementById('api-dot');
-
-      if (statusEl) {
-        statusEl.className = 'status-value status-checking';
-        statusEl.textContent = 'Checking...';
-      }
-      if (rtEl) rtEl.textContent = '';
-
-      const start = performance.now();
-      try {
-        const res = await fetch('/api/health');
-        const elapsed = Math.round(performance.now() - start);
-
-        if (res.ok) {
-          if (statusEl) {
-            statusEl.className = 'status-value status-healthy';
-            statusEl.textContent = 'Healthy';
-          }
-          if (rtEl) rtEl.textContent = elapsed + 'ms';
-          if (dot) {
-            dot.className = 'dot dot-green';
-          }
-          logToConsole('Backend API is healthy (' + elapsed + 'ms)', 'normal');
-        } else {
-          if (statusEl) {
-            statusEl.className = 'status-value status-error';
-            statusEl.textContent = 'Unreachable';
-          }
-          if (dot) dot.className = 'dot dot-red';
-          logToConsole('Backend API returned status ' + res.status, 'error');
+    
+    <script>
+        let isTestRunning = false;
+        let testStartTime = null;
+        let testResults = {
+            total: 0,
+            completed: 0,
+            failed: 0,
+            responseTimes: [],
+            totalDataBytes: 0
+        };
+        
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            setTimeout(() => {
+                statusEl.className = 'status';
+            }, 5000);
         }
-      } catch (err) {
-        const elapsed = Math.round(performance.now() - start);
-        if (statusEl) {
-          statusEl.className = 'status-value status-error';
-          statusEl.textContent = 'Unreachable';
+        
+        function startTest() {
+            if (isTestRunning) {
+                showStatus('Test is already running!', 'error');
+                return;
+            }
+            
+            const url = document.getElementById('testUrl').value;
+            const numRequests = parseInt(document.getElementById('numRequests').value);
+            const concurrency = parseInt(document.getElementById('concurrency').value);
+            const timeout = parseInt(document.getElementById('timeout').value);
+            
+            if (!url) {
+                showStatus('Please enter a target URL', 'error');
+                return;
+            }
+            
+            isTestRunning = true;
+            testStartTime = Date.now();
+            testResults = {
+                total: numRequests,
+                completed: 0,
+                failed: 0,
+                responseTimes: [],
+                totalDataBytes: 0
+            };
+            
+            document.getElementById('testStatus').textContent = 'Running...';
+            document.getElementById('totalRequests').textContent = numRequests;
+            
+            showStatus(`Starting load test with ${numRequests} requests...`, 'info');
+            
+            // Send test request to backend
+            fetch('/api/load-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, numRequests, concurrency, timeout })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateResults(data);
+                isTestRunning = false;
+                document.getElementById('testStatus').textContent = 'Completed';
+                showStatus('Load test completed successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Test error:', error);
+                isTestRunning = false;
+                document.getElementById('testStatus').textContent = 'Failed';
+                showStatus(`Error: ${error.message}`, 'error');
+            });
         }
-        if (rtEl) rtEl.textContent = elapsed + 'ms';
-        if (dot) dot.className = 'dot dot-red';
-        logToConsole('Backend API unreachable: ' + err.message, 'error');
-      }
-    }
-
-    /* ── Execute Endpoint ── */
-    async function executeEndpoint(path, label, btnId) {
-      const btn = document.getElementById(btnId);
-
-      /* Show spinner */
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span>';
-      }
-
-      logToConsole('▶ ' + label, 'normal');
-
-      const start = performance.now();
-      try {
-        const res  = await fetch(path);
-        const elapsed = Math.round(performance.now() - start);
-        let body;
-        try {
-          body = await res.json();
-        } catch (_) {
-          body = await res.text();
+        
+        function stopTest() {
+            if (!isTestRunning) {
+                showStatus('No test is currently running', 'info');
+                return;
+            }
+            
+            fetch('/api/load-test/stop', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    isTestRunning = false;
+                    document.getElementById('testStatus').textContent = 'Stopped';
+                    showStatus('Load test stopped', 'info');
+                })
+                .catch(error => {
+                    console.error('Stop error:', error);
+                    showStatus(`Error stopping test: ${error.message}`, 'error');
+                });
         }
-
-        const pretty = typeof body === 'object'
-          ? JSON.stringify(body, null, 2)
-          : String(body);
-
-        logToConsole('HTTP ' + res.status + ' · ' + elapsed + 'ms', res.ok ? 'info' : 'error');
-        pretty.split('\n').forEach(function(line) {
-          logToConsole(line, res.ok ? 'normal' : 'error');
-        });
-      } catch (err) {
-        logToConsole('✗ Error: ' + err.message, 'error');
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Execute';
+        
+        function clearResults() {
+            testResults = {
+                total: 0,
+                completed: 0,
+                failed: 0,
+                responseTimes: [],
+                totalDataBytes: 0
+            };
+            
+            document.getElementById('totalRequests').textContent = '0';
+            document.getElementById('completedRequests').textContent = '0';
+            document.getElementById('failedRequests').textContent = '0';
+            document.getElementById('successRate').textContent = '0%';
+            document.getElementById('avgResponse').textContent = '0ms';
+            document.getElementById('minResponse').textContent = '0ms';
+            document.getElementById('maxResponse').textContent = '0ms';
+            document.getElementById('p95Response').textContent = '0ms';
+            document.getElementById('rps').textContent = '0';
+            document.getElementById('duration').textContent = '0s';
+            document.getElementById('totalData').textContent = '0 KB';
+            document.getElementById('testStatus').textContent = 'Idle';
+            document.getElementById('resultsData').textContent = 'No test results yet. Start a load test to see results.';
+            
+            showStatus('Results cleared', 'info');
         }
-      }
-    }
-
-    /* ── Init on DOMContentLoaded ── */
-    document.addEventListener('DOMContentLoaded', function () {
-      logToConsole('LoadLab dashboard initialized', 'info');
-      logToConsole('Checking backend health...', 'info');
-
-      runHealthCheck().then(function () {
-        logToConsole('\u2500\u2500 Ready \u2500\u2500', 'info');
-      });
-
-      /* Auto-refresh health check every 30 seconds */
-      setInterval(runHealthCheck, 30000);
-    });
-  </script>
+        
+        function updateResults(data) {
+            const completed = data.completed || 0;
+            const failed = data.failed || 0;
+            const total = data.total || testResults.total;
+            const avgTime = data.avgTime || 0;
+            const minTime = data.minTime || 0;
+            const maxTime = data.maxTime || 0;
+            const p95Time = data.p95Time || 0;
+            
+            const duration = Math.round((Date.now() - testStartTime) / 1000);
+            const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const rps = duration > 0 ? (completed / duration).toFixed(2) : 0;
+            const totalKB = data.totalBytes ? (data.totalBytes / 1024).toFixed(2) : 0;
+            
+            document.getElementById('completedRequests').textContent = completed;
+            document.getElementById('failedRequests').textContent = failed;
+            document.getElementById('successRate').textContent = successRate + '%';
+            document.getElementById('avgResponse').textContent = Math.round(avgTime) + 'ms';
+            document.getElementById('minResponse').textContent = minTime + 'ms';
+            document.getElementById('maxResponse').textContent = maxTime + 'ms';
+            document.getElementById('p95Response').textContent = Math.round(p95Time) + 'ms';
+            document.getElementById('rps').textContent = rps;
+            document.getElementById('duration').textContent = duration + 's';
+            document.getElementById('totalData').textContent = totalKB + ' KB';
+            
+            const resultText = JSON.stringify(data, null, 2);
+            document.getElementById('resultsData').textContent = resultText;
+        }
+        
+        // Poll for updates while test is running
+        setInterval(() => {
+            if (isTestRunning) {
+                fetch('/api/load-test/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            updateResults(data);
+                        }
+                    })
+                    .catch(error => console.error('Status error:', error));
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
