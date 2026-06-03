@@ -74,6 +74,16 @@ app.get("/memory", (req, res) => {
   res.json({ endpoint: "memory", allocated: arr.length });
 });
 
+// Server info
+app.get("/info", (req, res) => {
+  res.json({
+    app: "LoadLab",
+    node: process.version,
+    uptime_seconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Prometheus metrics scrape endpoint
 app.get("/metrics", async (req, res) => {
   res.set("Content-Type", register.contentType);
