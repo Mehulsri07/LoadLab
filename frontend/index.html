@@ -75,11 +75,38 @@
       font-weight: 500;
     }
 
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
     .topbar-clock {
       font-family: var(--font-mono);
       font-size: 0.9rem;
       color: var(--text-muted);
       letter-spacing: 0.05em;
+    }
+
+    .topbar-github {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .topbar-github:hover {
+      color: var(--text);
+    }
+
+    .topbar-github svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      flex-shrink: 0;
     }
 
     /* ───────── LAYOUT ───────── */
@@ -422,6 +449,65 @@
       color: var(--danger);
     }
 
+    /* ───────── INLINE RESPONSE PANEL ───────── */
+    .endpoint-response {
+      display: none;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      background: #0a0f1a;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .endpoint-response.visible {
+      display: block;
+    }
+
+    .response-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: #0f1826;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .response-label {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .response-label .response-ms {
+      color: var(--success);
+      margin-left: 8px;
+    }
+
+    .response-label .response-ms.slow {
+      color: var(--warning);
+    }
+
+    .response-body {
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #60A5FA;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 160px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    .response-body.error {
+      color: var(--danger);
+    }
+
+    .response-body::-webkit-scrollbar { width: 4px; }
+    .response-body::-webkit-scrollbar-track { background: transparent; }
+    .response-body::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
     /* ───────── CONSOLE ───────── */
     .console-section {
       max-width: 1200px;
@@ -521,7 +607,15 @@
       <span class="topbar-logo">LoadLab</span>
       <span class="topbar-badge">v1.0</span>
     </div>
-    <span class="topbar-clock" id="clock">00:00:00</span>
+    <div class="topbar-right">
+      <a class="topbar-github" href="https://github.com/YOUR_USERNAME/loadlab" target="_blank" rel="noopener" title="View source on GitHub">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+        </svg>
+        GitHub
+      </a>
+      <span class="topbar-clock" id="clock">00:00:00</span>
+    </div>
   </header>
 
   <!-- ───────── HERO ───────── -->
@@ -554,15 +648,15 @@
       </div>
 
       <div class="status-row">
-        <div class="status-dot dot-static warning"></div>
+        <div class="status-dot gray" id="dot-prometheus"></div>
         <span class="status-name">Prometheus</span>
-        <span class="status-value warning">Monitoring</span>
+        <span class="status-value" id="status-prometheus">Checking...</span>
       </div>
 
       <div class="status-row">
-        <div class="status-dot dot-static warning"></div>
+        <div class="status-dot gray" id="dot-grafana"></div>
         <span class="status-name">Grafana</span>
-        <span class="status-value warning">Visualisation</span>
+        <span class="status-value" id="status-grafana">Checking...</span>
       </div>
     </div>
 
@@ -580,6 +674,10 @@
           <span class="run-label">Run ▶</span>
         </div>
       </button>
+      <div class="endpoint-response" id="resp-btn-health">
+        <div class="response-header"><span class="response-label" id="resp-meta-btn-health">Response</span></div>
+        <div class="response-body" id="resp-body-btn-health"></div>
+      </div>
 
       <button class="endpoint-btn" id="btn-cpu" onclick="executeEndpoint('CPU Stress Test', '/api/cpu')">
         <div class="btn-left">
@@ -591,6 +689,10 @@
           <span class="run-label">Run ▶</span>
         </div>
       </button>
+      <div class="endpoint-response" id="resp-btn-cpu">
+        <div class="response-header"><span class="response-label" id="resp-meta-btn-cpu">Response</span></div>
+        <div class="response-body" id="resp-body-btn-cpu"></div>
+      </div>
 
       <button class="endpoint-btn" id="btn-memory" onclick="executeEndpoint('Memory Test', '/api/memory')">
         <div class="btn-left">
@@ -602,6 +704,10 @@
           <span class="run-label">Run ▶</span>
         </div>
       </button>
+      <div class="endpoint-response" id="resp-btn-memory">
+        <div class="response-header"><span class="response-label" id="resp-meta-btn-memory">Response</span></div>
+        <div class="response-body" id="resp-body-btn-memory"></div>
+      </div>
 
       <button class="endpoint-btn" id="btn-slow" onclick="executeEndpoint('Slow Endpoint', '/api/slow')">
         <div class="btn-left">
@@ -613,6 +719,10 @@
           <span class="run-label">Run ▶</span>
         </div>
       </button>
+      <div class="endpoint-response" id="resp-btn-slow">
+        <div class="response-header"><span class="response-label" id="resp-meta-btn-slow">Response</span></div>
+        <div class="response-body" id="resp-body-btn-slow"></div>
+      </div>
 
       <button class="endpoint-btn" id="btn-metrics" onclick="executeEndpoint('Metrics', '/api/metrics')">
         <div class="btn-left">
@@ -624,6 +734,10 @@
           <span class="run-label">Run ▶</span>
         </div>
       </button>
+      <div class="endpoint-response" id="resp-btn-metrics">
+        <div class="response-header"><span class="response-label" id="resp-meta-btn-metrics">Response</span></div>
+        <div class="response-body" id="resp-body-btn-metrics"></div>
+      </div>
     </div>
 
     <!-- Monitoring -->
@@ -635,14 +749,14 @@
           <span class="monitoring-icon">📊</span>
           <div class="monitoring-title">Grafana Dashboard</div>
           <div class="monitoring-desc">Infrastructure metrics, request rates, and latency percentiles.</div>
-          <button class="monitoring-btn" onclick="window.open(GRAFANA_URL, '_blank')">Open Grafana →</button>
+          <button class="monitoring-btn" onclick="window.open('/grafana/', '_blank')">Open Grafana →</button>
         </div>
 
         <div class="monitoring-sub-card">
           <span class="monitoring-icon">🔭</span>
           <div class="monitoring-title">Prometheus</div>
           <div class="monitoring-desc">Raw metrics, PromQL queries, and time-series exploration.</div>
-          <button class="monitoring-btn" onclick="window.open(PROMETHEUS_URL, '_blank')">Open Prometheus →</button>
+          <button class="monitoring-btn" onclick="window.open('/prometheus/', '_blank')">Open Prometheus →</button>
         </div>
 
       </div>
@@ -659,7 +773,7 @@
         </div>
 
         <div class="info-row">
-          <span class="info-label">Node Version</span>
+          <span class="info-label">Runtime</span>
           <span class="info-value" id="info-node">—</span>
         </div>
 
@@ -690,7 +804,7 @@
 
         <div class="info-row">
           <span class="info-label">Environment</span>
-          <span class="info-value">Development</span>
+          <span class="info-value" id="info-env">—</span>
         </div>
 
       </div>
@@ -714,9 +828,6 @@
   </footer>
 
   <script>
-    const GRAFANA_URL    = 'http://43.204.103.85:3003';
-    const PROMETHEUS_URL = 'http://43.204.103.85:9090';
-
     document.addEventListener('DOMContentLoaded', () => {
 
       // ── Clock ──────────────────────────────────────────────────────────────
@@ -731,102 +842,129 @@
       setInterval(updateClock, 1000);
 
       // ── Helpers ────────────────────────────────────────────────────────────
-      function timestamp() {
+      function ts() {
         const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        return `${h}:${m}:${s}`;
+        return [now.getHours(), now.getMinutes(), now.getSeconds()]
+          .map(n => String(n).padStart(2, '0')).join(':');
       }
 
       function formatUptime(seconds) {
-        const totalSec = Math.floor(seconds);
-        const h = Math.floor(totalSec / 3600);
-        const remainder = totalSec % 3600;
-        const min = Math.floor(remainder / 60);
-        const sec = remainder % 60;
-        let result = '';
-        if (h > 0)   result += `${h}h `;
-        if (min > 0) result += `${min}m `;
-        result += `${sec}s`;
-        return result.trim();
+        const s = Math.floor(seconds);
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        let r = '';
+        if (h > 0) r += `${h}h `;
+        if (m > 0) r += `${m}m `;
+        r += `${sec}s`;
+        return r.trim();
       }
 
-      function formatTime(isoString) {
-        try {
-          return new Date(isoString).toLocaleTimeString();
-        } catch (_) {
-          return isoString;
-        }
+      function capitalize(str) {
+        return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
       }
 
       // ── Console ────────────────────────────────────────────────────────────
-      function logToConsole(message, type) {
-        const consoleEl = document.getElementById('console');
+      function log(message, type) {
+        const el = document.getElementById('console');
         const line = document.createElement('span');
         line.className = `log-line log-${type || 'info'}`;
-        line.textContent = `[${timestamp()}] ${message}\n`;
-        consoleEl.appendChild(line);
-        consoleEl.scrollTop = consoleEl.scrollHeight;
+        line.textContent = `[${ts()}] ${message}\n`;
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
       }
 
-      function clearConsole() {
+      window.clearConsole = () => {
         document.getElementById('console').innerHTML = '';
-      }
-      window.clearConsole = clearConsole;
+      };
 
-      // ── Health Check ───────────────────────────────────────────────────────
+      // ── Status dot helper ──────────────────────────────────────────────────
+      function setStatus(dotId, statusId, state, text) {
+        const dot = document.getElementById(dotId);
+        const val = document.getElementById(statusId);
+        const colorMap = { online: 'green', offline: 'red', checking: 'gray' };
+        dot.className = `status-dot ${colorMap[state] || 'gray'}`;
+        val.className = `status-value ${state === 'online' ? 'online' : state === 'offline' ? 'offline' : ''}`;
+        val.textContent = text;
+      }
+
+      // ── Backend health check ───────────────────────────────────────────────
       async function checkHealth() {
-        const dot    = document.getElementById('dot-backend');
-        const status = document.getElementById('status-backend');
+        setStatus('dot-backend', 'status-backend', 'checking', 'Checking...');
         try {
-          const t0  = performance.now();
+          const t0 = performance.now();
           const res = await fetch('/api/health');
-          const ms  = Math.round(performance.now() - t0);
+          const ms = Math.round(performance.now() - t0);
           if (res.ok) {
-            dot.className    = 'status-dot green';
-            status.className = 'status-value online';
-            status.textContent = `Online · ${ms}ms`;
-            logToConsole(`Backend API online · ${ms}ms`, 'ok');
+            setStatus('dot-backend', 'status-backend', 'online', `Online · ${ms}ms`);
+            log(`Backend API online · ${ms}ms`, 'ok');
           } else {
             throw new Error(`HTTP ${res.status}`);
           }
         } catch (err) {
-          dot.className    = 'status-dot red';
-          status.className = 'status-value offline';
-          status.textContent = 'Offline';
-          logToConsole(`Backend API health check failed: ${err.message}`, 'error');
+          setStatus('dot-backend', 'status-backend', 'offline', 'Offline');
+          log(`Backend API offline: ${err.message}`, 'error');
         }
       }
 
-      // ── System Info ────────────────────────────────────────────────────────
+      // ── Prometheus + Grafana status via /api/status ────────────────────────
+      async function checkServiceStatus() {
+        try {
+          const res = await fetch('/api/status');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          const prom = data.prometheus;
+          if (prom && prom.status === 'online') {
+            setStatus('dot-prometheus', 'status-prometheus', 'online', `Online · ${prom.ms}ms`);
+          } else {
+            setStatus('dot-prometheus', 'status-prometheus', 'offline', 'Offline');
+          }
+
+          const graf = data.grafana;
+          if (graf && graf.status === 'online') {
+            setStatus('dot-grafana', 'status-grafana', 'online', `Online · ${graf.ms}ms`);
+          } else {
+            setStatus('dot-grafana', 'status-grafana', 'offline', 'Offline');
+          }
+        } catch (err) {
+          setStatus('dot-prometheus', 'status-prometheus', 'offline', 'Offline');
+          setStatus('dot-grafana', 'status-grafana', 'offline', 'Offline');
+          log(`Service status check failed: ${err.message}`, 'error');
+        }
+      }
+
+      // ── System info ────────────────────────────────────────────────────────
       async function loadInfo() {
-        logToConsole('Fetching system information...', 'info');
+        log('Fetching system information...', 'info');
         try {
           const res  = await fetch('/api/info');
           const data = await res.json();
 
-          const nodeEl   = document.getElementById('info-node');
-          const uptimeEl = document.getElementById('info-uptime');
-          const timeEl   = document.getElementById('info-time');
+          document.getElementById('info-node').textContent =
+            data.go || data.node || '—';
+          document.getElementById('info-uptime').textContent =
+            data.uptime_seconds != null ? formatUptime(data.uptime_seconds) : '—';
+          document.getElementById('info-time').textContent =
+            data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : '—';
 
-          nodeEl.textContent   = data.node    || '—';
-          uptimeEl.textContent = data.uptime_seconds != null ? formatUptime(data.uptime_seconds) : '—';
-          timeEl.textContent   = data.timestamp ? formatTime(data.timestamp) : '—';
+          const envEl = document.getElementById('info-env');
+          if (envEl) {
+            envEl.textContent = capitalize(data.environment) || '—';
+          }
 
-          const upStr = data.uptime_seconds != null ? ` · Uptime ${formatUptime(data.uptime_seconds)}` : '';
-          logToConsole(`System info loaded · Node ${data.node || '?'}${upStr}`, 'ok');
+          const up = data.uptime_seconds != null ? ` · Uptime ${formatUptime(data.uptime_seconds)}` : '';
+          log(`System info loaded · ${data.go || data.node || '?'}${up}`, 'ok');
         } catch (err) {
-          ['info-node', 'info-uptime', 'info-time'].forEach(id => {
+          ['info-node', 'info-uptime', 'info-time', 'info-env'].forEach(id => {
             const el = document.getElementById(id);
-            el.textContent = 'Unavailable';
-            el.className   = 'info-value unavailable';
+            if (el) { el.textContent = 'Unavailable'; el.className = 'info-value unavailable'; }
           });
-          logToConsole(`System info fetch failed: ${err.message}`, 'error');
+          log(`System info failed: ${err.message}`, 'error');
         }
       }
 
-      // ── Endpoint Testing ───────────────────────────────────────────────────
+      // ── Endpoint execution ─────────────────────────────────────────────────
       const BTN_IDS = {
         '/api/health':  'btn-health',
         '/api/cpu':     'btn-cpu',
@@ -835,15 +973,19 @@
         '/api/metrics': 'btn-metrics',
       };
 
-      async function executeEndpoint(label, path) {
-        const btnId = BTN_IDS[path];
-        const btn   = document.getElementById(btnId);
+      window.executeEndpoint = async function(label, path) {
+        const btnId  = BTN_IDS[path];
+        const btn    = document.getElementById(btnId);
+        const panel  = document.getElementById(`resp-${btnId}`);
+        const meta   = document.getElementById(`resp-meta-${btnId}`);
+        const body   = document.getElementById(`resp-body-${btnId}`);
         if (!btn || btn.disabled) return;
 
         btn.disabled = true;
         btn.classList.add('loading');
+        if (panel) panel.classList.remove('visible');
 
-        logToConsole(`Running ${label}...`, 'info');
+        log(`Running ${label}...`, 'info');
 
         const t0 = performance.now();
         try {
@@ -853,36 +995,53 @@
           if (path === '/api/metrics') {
             const text  = await res.text();
             const lines = text.split('\n');
-            logToConsole(`${label} completed in ${ms}ms`, 'ok');
-            const maxLines = 40;
-            const display  = lines.slice(0, maxLines);
-            display.forEach(l => logToConsole(l, 'data'));
-            if (lines.length > maxLines) {
-              logToConsole(`... [truncated, ${lines.length} lines total]`, 'info');
+            log(`${label} completed in ${ms}ms`, 'ok');
+            lines.slice(0, 40).forEach(l => log(l, 'data'));
+            if (lines.length > 40) log(`... [truncated, ${lines.length} lines total]`, 'info');
+
+            if (panel && meta && body) {
+              meta.innerHTML = `Response <span class="response-ms${ms > 1000 ? ' slow' : ''}">${ms}ms</span>`;
+              body.className = 'response-body';
+              body.textContent = lines.slice(0, 20).join('\n') + (lines.length > 20 ? '\n... [truncated]' : '');
+              panel.classList.add('visible');
             }
           } else {
-            const data    = await res.json();
-            const pretty  = JSON.stringify(data, null, 2);
-            logToConsole(`${label} completed in ${ms}ms`, 'ok');
-            pretty.split('\n').forEach(l => logToConsole(l, 'data'));
+            const data   = await res.json();
+            const pretty = JSON.stringify(data, null, 2);
+            log(`${label} completed in ${ms}ms`, 'ok');
+            pretty.split('\n').forEach(l => log(l, 'data'));
+
+            if (panel && meta && body) {
+              meta.innerHTML = `Response <span class="response-ms${ms > 1000 ? ' slow' : ''}">${ms}ms</span>`;
+              body.className = 'response-body';
+              body.textContent = pretty;
+              panel.classList.add('visible');
+            }
           }
         } catch (err) {
-          logToConsole(`${label} failed: ${err.message}`, 'error');
+          log(`${label} failed: ${err.message}`, 'error');
+          if (panel && meta && body) {
+            meta.innerHTML = 'Response <span style="color:var(--danger)">Error</span>';
+            body.className = 'response-body error';
+            body.textContent = err.message;
+            panel.classList.add('visible');
+          }
         } finally {
           btn.disabled = false;
           btn.classList.remove('loading');
         }
-      }
-      window.executeEndpoint = executeEndpoint;
+      };
 
       // ── Init ───────────────────────────────────────────────────────────────
-      logToConsole('LoadLab dashboard initialized', 'info');
-      logToConsole('Running backend health check...', 'info');
+      log('LoadLab dashboard initialized', 'info');
+      log('Running health checks...', 'info');
 
       checkHealth();
+      checkServiceStatus();
       loadInfo();
 
       setInterval(checkHealth, 30000);
+      setInterval(checkServiceStatus, 30000);
     });
   </script>
 

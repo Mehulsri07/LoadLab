@@ -1,9 +1,0 @@
-{
-  "name": "loadlab",
-  "version": "1.0.0",
-  "main": "server.js",
-  "dependencies": {
-    "express": "^5.0.0",
-    "prom-client": "^15.1.0"
-  }
-}

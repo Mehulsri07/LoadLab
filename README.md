@@ -8,7 +8,7 @@ A deliberately simple system designed to fail under load — so you can learn De
 |---|---|
 | Docker + Docker Compose | Container orchestration |
 | Nginx | Reverse proxy / load balancer |
-| Node.js (Express) | Backend API with intentionally expensive endpoints |
+| Go (net/http) | Backend API with intentionally expensive endpoints |
 | Prometheus | Metrics collection |
 | Grafana | Metrics visualization |
 | node-exporter | Host-level metrics (CPU, memory, disk) |
@@ -23,7 +23,7 @@ Internet
 Nginx :80
    │
    ▼
-Node.js API :3000
+Go API :3000
    │
    ├── /health   → fast, always succeeds
    ├── /slow     → 3s artificial delay
@@ -64,8 +64,9 @@ docker compose up -d --build
 4. Build a custom dashboard using these metrics:
    - `http_requests_total` — request rate by route
    - `http_request_duration_seconds` — latency percentiles
-   - `process_cpu_seconds_total` — Node.js CPU usage
-   - `nodejs_heap_size_used_bytes` — heap memory
+   - `process_cpu_seconds_total` — Go process CPU usage
+   - `go_memstats_alloc_bytes` — Go heap memory
+   - `go_goroutines` — active goroutines
 
 ### 4. Run load tests
 
@@ -95,8 +96,8 @@ k6 run k6/stress-test.js
 ## What to observe
 
 - **Latency climb**: Watch `http_request_duration_seconds` p95/p99 rise as VUs increase
-- **CPU saturation**: `/cpu` under concurrent load will queue requests — one Node.js thread
-- **Memory pressure**: Repeated `/memory` hits will trigger GC pauses visible in heap metrics
+- **CPU saturation**: `/cpu` under concurrent load — Go handles requests concurrently via goroutines, so watch `go_goroutines` spike
+- **Memory pressure**: Repeated `/memory` hits will spike `go_memstats_alloc_bytes` and trigger GC pauses
 - **Error rate**: At high enough VUs, Nginx will start returning 502s — watch `http_req_failed` in k6
 - **Recovery**: After the stress test ramps down, watch metrics return to baseline
 
