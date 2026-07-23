@@ -1,121 +1,27 @@
-# LoadLab
+# LoadLab ⚡
 
-A deliberately simple system designed to fail under load — so you can learn DevOps by watching things break and recovering them.
+LoadLab is a Dockerized environment built specifically to fail on purpose. It is a dedicated system for practicing site reliability engineering, telemetry, and load testing by subjecting a robust architecture to realistic, heavy stress.
 
-## Stack
+## 🚀 Overview
 
-| Tool | Role |
-|---|---|
-| Docker + Docker Compose | Container orchestration |
-| Nginx | Reverse proxy / load balancer |
-| Go (net/http) | Backend API with intentionally expensive endpoints |
-| Prometheus | Metrics collection |
-| Grafana | Metrics visualization |
-| node-exporter | Host-level metrics (CPU, memory, disk) |
-| k6 | Load generation |
+Understanding how systems break is the best way to make them resilient. LoadLab features an intentionally unoptimized, resource-heavy backend. By generating varying intensities of artificial traffic, developers can monitor system degradation in real-time, trace bottlenecks, and optimize infrastructure limits. 
 
-## Architecture
+## ✨ Key Features
 
-```
-Internet
-   │
-   ▼
-Nginx :80
-   │
-   ▼
-Go API :3000
-   │
-   ├── /health   → fast, always succeeds
-   ├── /slow     → 3s artificial delay
-   ├── /cpu      → prime number sieve (CPU spike)
-   ├── /memory   → allocates 1M objects (memory spike)
-   └── /metrics  → Prometheus scrape endpoint
+* **Intentionally Expensive Endpoints:** An Nginx-proxied Node/Express backend containing routes designed to consume excessive CPU and memory.
+* **Multi-Intensity Load Generation:** Configured `k6` scripts to simulate traffic at three distinct stress intensities (Low, Medium, High).
+* **Real-Time Telemetry:** Fully integrated Prometheus and Grafana stack for live metrics, visualizing server strain and response times.
+* **Production-Ready Deployment:** Entirely Dockerized and deployable to AWS EC2 for realistic remote load testing over the network.
 
-Prometheus :9090  ◄── scrapes /metrics every 5s
-   │
-   ▼
-Grafana :3003
+## 🛠️ Tech Stack
 
-node-exporter :9100  ◄── host OS metrics
-```
+* **Backend Environment:** Node.js, Express, Nginx
+* **Load Testing:** k6
+* **Monitoring & Metrics:** Prometheus, Grafana
+* **Containerization & Hosting:** Docker, Docker Compose, AWS EC2
 
-## Quick Start
+## 📦 Getting Started
 
-### 1. Start the stack
-
-```bash
-docker compose up -d --build
-```
-
-### 2. Verify services
-
-| Service | URL |
-|---|---|
-| Backend (direct) | http://localhost:3000/health |
-| Backend via Nginx | http://localhost/health |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3003 |
-
-### 3. Configure Grafana
-
-1. Open http://localhost:3003 (default login: `admin` / `admin`)
-2. Add a Prometheus data source: `http://prometheus:9090`
-3. Import dashboard ID **1860** (Node Exporter Full) for host metrics
-4. Build a custom dashboard using these metrics:
-   - `http_requests_total` — request rate by route
-   - `http_request_duration_seconds` — latency percentiles
-   - `process_cpu_seconds_total` — Go process CPU usage
-   - `go_memstats_alloc_bytes` — Go heap memory
-   - `go_goroutines` — active goroutines
-
-### 4. Run load tests
-
-Replace `YOUR_SERVER_IP` in the k6 scripts with `localhost` (local) or your EC2 public IP (remote).
-
-```bash
-# Light load — health endpoint only
-k6 run k6/health-test.js
-
-# CPU stress — ramps to 50 VUs hitting /cpu
-k6 run k6/cpu-test.js
-
-# Full stress — all endpoints, ramps to 300 VUs
-k6 run k6/stress-test.js
-```
-
-## Endpoints
-
-| Route | What it does | Why it's interesting |
-|---|---|---|
-| `GET /health` | Returns `{status: "ok"}` | Baseline — should never fail |
-| `GET /slow` | Waits 3 seconds | Simulates slow DB / upstream |
-| `GET /cpu` | Counts primes to 1,000,000 | Pegs a CPU core |
-| `GET /memory` | Allocates 1M objects | Spikes heap usage |
-| `GET /metrics` | Prometheus metrics | Scraped every 5s |
-
-## What to observe
-
-- **Latency climb**: Watch `http_request_duration_seconds` p95/p99 rise as VUs increase
-- **CPU saturation**: `/cpu` under concurrent load — Go handles requests concurrently via goroutines, so watch `go_goroutines` spike
-- **Memory pressure**: Repeated `/memory` hits will spike `go_memstats_alloc_bytes` and trigger GC pauses
-- **Error rate**: At high enough VUs, Nginx will start returning 502s — watch `http_req_failed` in k6
-- **Recovery**: After the stress test ramps down, watch metrics return to baseline
-
-## Deploying to AWS EC2
-
-1. Launch an EC2 instance (t3.small or larger recommended)
-2. Install Docker:
+1. **Clone the repository:**
    ```bash
-   sudo apt update && sudo apt install -y docker.io docker-compose-plugin
-   sudo usermod -aG docker ubuntu
-   ```
-3. Clone this repo and run `docker compose up -d --build`
-4. Open ports 80, 3003, 9090 in your security group
-5. Update `YOUR_SERVER_IP` in k6 scripts to your EC2 public IP
-6. Run k6 from a separate machine for realistic results
-
-## Teardown
-
-```bash
-docker compose down
-```
+   git clone [https://github.com/Mehulsri07/LoadLab.git](https://github.com/Mehulsri07/LoadLab.git)
