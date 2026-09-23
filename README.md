@@ -29,6 +29,10 @@ flowchart LR
 
 Traffic flows left to right through Nginx into the backend. Prometheus scrapes the backend and the host, and Grafana turns those metrics into live dashboards.
 
+<!--
+SCREENSHOTS: uncomment this block once the images exist in docs/img/.
+Do not uncomment it with missing files, or GitHub shows broken-image icons.
+
 ## Screenshots
 
 | Grafana under **high** load | Prometheus targets |
@@ -36,6 +40,7 @@ Traffic flows left to right through Nginx into the backend. Prometheus scrapes t
 | ![Grafana dashboard during a high-intensity k6 run](docs/img/grafana-high-load.png) | ![Prometheus targets page showing all scrape jobs UP](docs/img/prometheus-targets.png) |
 
 ![k6 end-of-test summary](docs/img/k6-summary.png)
+-->
 
 ## Key features
 
