@@ -1,4 +1,4 @@
-# LoadLab ⚡
+# LoadLab
 
 **A Dockerized system built to fail on purpose.** LoadLab pairs an intentionally expensive Node/Express backend with a full observability stack, so you can push it over with k6 and watch exactly how, and where, it degrades.
 
