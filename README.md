@@ -1,6 +1,6 @@
 # LoadLab
 
-**A Dockerized system built to fail on purpose.** LoadLab pairs an intentionally expensive Node/Express backend with a full observability stack, so you can push it over with k6 and watch exactly how, and where, it degrades.
+**A Dockerized system built to fail on purpose.** LoadLab pairs an intentionally expensive Go backend with a full observability stack, so you can push it over with k6 and watch exactly how, and where, it degrades.
 
 Understanding how systems break is the best way to make them resilient. This project is a sandbox for practising SRE fundamentals: load testing, telemetry, bottleneck hunting and capacity limits, on real cloud infrastructure rather than `localhost`.
 
@@ -13,7 +13,7 @@ flowchart LR
 
     subgraph EC2["AWS EC2 (Docker Compose)"]
         N["Nginx<br/>reverse proxy :80"]
-        B["Node/Express backend<br/>CPU + memory heavy routes"]
+        B["Go backend<br/>CPU + memory heavy routes"]
         NE["Node Exporter<br/>host metrics :9100"]
         P["Prometheus<br/>:9090"]
         G["Grafana<br/>:3000"]
@@ -44,7 +44,7 @@ Do not uncomment it with missing files, or GitHub shows broken-image icons.
 
 ## Key features
 
-- **Intentionally expensive endpoints:** an Nginx-proxied Node/Express backend with routes designed to burn CPU and memory.
+- **Intentionally expensive endpoints:** an Nginx-proxied Go backend (instrumented with the Prometheus Go client) with routes designed to burn CPU and memory.
 - **Three load profiles:** `k6` scripts simulate low, medium and high traffic intensity.
 - **Real-time telemetry:** Prometheus and Grafana show server strain and response times as it happens.
 - **Infrastructure as code:** one `terraform apply` provisions a hardened EC2 host and boots the whole stack.
@@ -54,7 +54,7 @@ Do not uncomment it with missing files, or GitHub shows broken-image icons.
 
 | Layer | Tools |
 |---|---|
-| App | Node.js, Express, Nginx |
+| App | Go, Nginx |
 | Load testing | k6 |
 | Observability | Prometheus, Grafana, Node Exporter |
 | Packaging | Docker, Docker Compose |
