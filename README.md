@@ -47,7 +47,6 @@ Do not uncomment it with missing files, or GitHub shows broken-image icons.
 - **Intentionally expensive endpoints:** an Nginx-proxied Go backend (instrumented with the Prometheus Go client) with routes designed to burn CPU and memory.
 - **Three load profiles:** `k6` scripts simulate low, medium and high traffic intensity.
 - **Real-time telemetry:** Prometheus and Grafana show server strain and response times as it happens.
-- **Infrastructure as code:** one `terraform apply` provisions a hardened EC2 host and boots the whole stack.
 - **Realistic remote testing:** deployed to AWS so load crosses a real network instead of loopback.
 
 ## Tech stack
@@ -58,7 +57,7 @@ Do not uncomment it with missing files, or GitHub shows broken-image icons.
 | Load testing | k6 |
 | Observability | Prometheus, Grafana, Node Exporter |
 | Packaging | Docker, Docker Compose |
-| Cloud + IaC | AWS EC2, Terraform |
+| Cloud | AWS EC2 |
 
 ## Run it locally
 
@@ -82,29 +81,15 @@ k6 run -e BASE_URL=http://localhost k6/<script>.js
 
 Keep Grafana open while it runs. That's the fun part.
 
-## Deploy to AWS with Terraform
+## Deploy to AWS EC2
 
-The `terraform/` folder creates an Ubuntu 24.04 EC2 instance, an Elastic IP and a security group, then installs Docker and starts the stack via user data.
-
-```bash
-cd terraform
-cp terraform.tfvars.example terraform.tfvars   # set admin_cidr to your IP, key_name to your key pair
-terraform init
-terraform plan
-terraform apply
-```
-
-Give it a couple of minutes to boot, then use the printed `app_url` as the k6 target and `grafana_url` for dashboards. Tear it down when you're done so you're not paying for an idle box:
+On an Ubuntu EC2 instance with Docker and Docker Compose installed, run the same three commands as above, then point k6 at the instance's public address from your own machine:
 
 ```bash
-terraform destroy
+k6 run -e BASE_URL=http://<ec2-public-ip> k6/<script>.js
 ```
 
-Design choices worth knowing about:
-
-- The app port (80) is public because it's the thing being load tested. **SSH, Grafana and Prometheus are restricted to `admin_cidr`**, and Terraform refuses `0.0.0.0/0` for it.
-- IMDSv2 is enforced and the root volume is encrypted.
-- `t3.small` is the default. `t3.micro` runs out of CPU credits quickly under high-intensity tests, which muddies your results.
+Only port 80 needs to be open to the internet, because it's the thing being load tested. Keep SSH (22), Grafana (3000) and Prometheus (9090) restricted to your own IP in the security group. A `t3.small` is a good size: a `t3.micro` runs out of CPU credits quickly under the high-intensity profile, which muddies the results. Stop the instance when you're done so you're not paying for an idle box.
 
 ## What to look for
 
