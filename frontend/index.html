@@ -109,13 +109,6 @@
       flex-shrink: 0;
     }
 
-    /* ───────── LAYOUT ───────── */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 32px;
-    }
-
     /* ───────── HERO ───────── */
     .hero {
       padding: 64px 32px 48px;
@@ -241,21 +234,16 @@
       animation: pulse 1.8s ease-in-out infinite;
     }
 
-    .status-dot.green {
+    .status-dot.online {
       background: var(--success);
     }
 
-    .status-dot.red {
+    .status-dot.offline {
       background: var(--danger);
     }
 
-    .status-dot.gray {
+    .status-dot.checking {
       background: var(--text-muted);
-    }
-
-    .dot-static.warning {
-      background: var(--warning);
-      animation: pulse 1.8s ease-in-out infinite;
     }
 
     .status-name {
@@ -274,7 +262,6 @@
 
     .status-value.online  { color: var(--success); }
     .status-value.offline { color: var(--danger); }
-    .status-value.warning { color: var(--warning); }
 
     @keyframes pulse {
       0%   { transform: scale(1);   opacity: 1; }
@@ -399,6 +386,8 @@
     }
 
     .monitoring-btn {
+      display: inline-block;
+      text-decoration: none;
       background: var(--primary);
       color: #fff;
       border: none;
@@ -447,6 +436,10 @@
 
     .info-value.unavailable {
       color: var(--danger);
+    }
+
+    #info-env {
+      text-transform: capitalize;
     }
 
     /* ───────── INLINE RESPONSE PANEL ───────── */
@@ -608,7 +601,7 @@
       <span class="topbar-badge">v1.0</span>
     </div>
     <div class="topbar-right">
-      <a class="topbar-github" href="https://github.com/YOUR_USERNAME/loadlab" target="_blank" rel="noopener" title="View source on GitHub">
+      <a class="topbar-github" href="https://github.com/Mehulsri07/LoadLab" target="_blank" rel="noopener" title="View source on GitHub">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
         </svg>
@@ -627,7 +620,7 @@
       <span class="badge">AWS EC2</span>
       <span class="badge">Docker</span>
       <span class="badge">NGINX</span>
-      <span class="badge">Node.js</span>
+      <span class="badge">Go</span>
       <span class="badge">Prometheus</span>
       <span class="badge">Grafana</span>
       <span class="badge">k6</span>
@@ -642,102 +635,28 @@
       <div class="card-title">System Status</div>
 
       <div class="status-row">
-        <div class="status-dot gray" id="dot-backend"></div>
+        <div class="status-dot checking" id="dot-backend"></div>
         <span class="status-name">Backend API</span>
         <span class="status-value" id="status-backend">Checking...</span>
       </div>
 
       <div class="status-row">
-        <div class="status-dot gray" id="dot-prometheus"></div>
+        <div class="status-dot checking" id="dot-prometheus"></div>
         <span class="status-name">Prometheus</span>
         <span class="status-value" id="status-prometheus">Checking...</span>
       </div>
 
       <div class="status-row">
-        <div class="status-dot gray" id="dot-grafana"></div>
+        <div class="status-dot checking" id="dot-grafana"></div>
         <span class="status-name">Grafana</span>
         <span class="status-value" id="status-grafana">Checking...</span>
       </div>
     </div>
 
     <!-- Endpoint Testing -->
-    <div class="card">
+    <div class="card" id="endpoints">
       <div class="card-title">Endpoint Testing</div>
 
-      <button class="endpoint-btn" id="btn-health" onclick="executeEndpoint('Health Check', '/api/health')">
-        <div class="btn-left">
-          <span class="btn-label">Health Check</span>
-          <span class="btn-path">GET /api/health</span>
-        </div>
-        <div class="btn-right">
-          <div class="spinner"></div>
-          <span class="run-label">Run ▶</span>
-        </div>
-      </button>
-      <div class="endpoint-response" id="resp-btn-health">
-        <div class="response-header"><span class="response-label" id="resp-meta-btn-health">Response</span></div>
-        <div class="response-body" id="resp-body-btn-health"></div>
-      </div>
-
-      <button class="endpoint-btn" id="btn-cpu" onclick="executeEndpoint('CPU Stress Test', '/api/cpu')">
-        <div class="btn-left">
-          <span class="btn-label">CPU Stress Test</span>
-          <span class="btn-path">GET /api/cpu</span>
-        </div>
-        <div class="btn-right">
-          <div class="spinner"></div>
-          <span class="run-label">Run ▶</span>
-        </div>
-      </button>
-      <div class="endpoint-response" id="resp-btn-cpu">
-        <div class="response-header"><span class="response-label" id="resp-meta-btn-cpu">Response</span></div>
-        <div class="response-body" id="resp-body-btn-cpu"></div>
-      </div>
-
-      <button class="endpoint-btn" id="btn-memory" onclick="executeEndpoint('Memory Test', '/api/memory')">
-        <div class="btn-left">
-          <span class="btn-label">Memory Test</span>
-          <span class="btn-path">GET /api/memory</span>
-        </div>
-        <div class="btn-right">
-          <div class="spinner"></div>
-          <span class="run-label">Run ▶</span>
-        </div>
-      </button>
-      <div class="endpoint-response" id="resp-btn-memory">
-        <div class="response-header"><span class="response-label" id="resp-meta-btn-memory">Response</span></div>
-        <div class="response-body" id="resp-body-btn-memory"></div>
-      </div>
-
-      <button class="endpoint-btn" id="btn-slow" onclick="executeEndpoint('Slow Endpoint', '/api/slow')">
-        <div class="btn-left">
-          <span class="btn-label">Slow Endpoint</span>
-          <span class="btn-path">GET /api/slow</span>
-        </div>
-        <div class="btn-right">
-          <div class="spinner"></div>
-          <span class="run-label">Run ▶</span>
-        </div>
-      </button>
-      <div class="endpoint-response" id="resp-btn-slow">
-        <div class="response-header"><span class="response-label" id="resp-meta-btn-slow">Response</span></div>
-        <div class="response-body" id="resp-body-btn-slow"></div>
-      </div>
-
-      <button class="endpoint-btn" id="btn-metrics" onclick="executeEndpoint('Metrics', '/api/metrics')">
-        <div class="btn-left">
-          <span class="btn-label">Metrics</span>
-          <span class="btn-path">GET /api/metrics</span>
-        </div>
-        <div class="btn-right">
-          <div class="spinner"></div>
-          <span class="run-label">Run ▶</span>
-        </div>
-      </button>
-      <div class="endpoint-response" id="resp-btn-metrics">
-        <div class="response-header"><span class="response-label" id="resp-meta-btn-metrics">Response</span></div>
-        <div class="response-body" id="resp-body-btn-metrics"></div>
-      </div>
     </div>
 
     <!-- Monitoring -->
@@ -749,14 +668,14 @@
           <span class="monitoring-icon">📊</span>
           <div class="monitoring-title">Grafana Dashboard</div>
           <div class="monitoring-desc">Infrastructure metrics, request rates, and latency percentiles.</div>
-          <button class="monitoring-btn" onclick="window.open('/grafana/', '_blank')">Open Grafana →</button>
+          <a class="monitoring-btn" href="/grafana/" target="_blank" rel="noopener">Open Grafana →</a>
         </div>
 
         <div class="monitoring-sub-card">
           <span class="monitoring-icon">🔭</span>
           <div class="monitoring-title">Prometheus</div>
           <div class="monitoring-desc">Raw metrics, PromQL queries, and time-series exploration.</div>
-          <button class="monitoring-btn" onclick="window.open('/prometheus/', '_blank')">Open Prometheus →</button>
+          <a class="monitoring-btn" href="/prometheus/" target="_blank" rel="noopener">Open Prometheus →</a>
         </div>
 
       </div>
@@ -774,7 +693,7 @@
 
         <div class="info-row">
           <span class="info-label">Runtime</span>
-          <span class="info-value" id="info-node">—</span>
+          <span class="info-value" id="info-runtime">—</span>
         </div>
 
         <div class="info-row">
@@ -831,23 +750,12 @@
     document.addEventListener('DOMContentLoaded', () => {
 
       // ── Clock ──────────────────────────────────────────────────────────────
-      function updateClock() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        document.getElementById('clock').textContent = `${h}:${m}:${s}`;
-      }
+      const ts = () => new Date().toLocaleTimeString('en-GB');
+      const updateClock = () => { document.getElementById('clock').textContent = ts(); };
       updateClock();
       setInterval(updateClock, 1000);
 
       // ── Helpers ────────────────────────────────────────────────────────────
-      function ts() {
-        const now = new Date();
-        return [now.getHours(), now.getMinutes(), now.getSeconds()]
-          .map(n => String(n).padStart(2, '0')).join(':');
-      }
-
       function formatUptime(seconds) {
         const s = Math.floor(seconds);
         const h = Math.floor(s / 3600);
@@ -858,10 +766,6 @@
         if (m > 0) r += `${m}m `;
         r += `${sec}s`;
         return r.trim();
-      }
-
-      function capitalize(str) {
-        return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
       }
 
       // ── Console ────────────────────────────────────────────────────────────
@@ -878,58 +782,52 @@
         document.getElementById('console').innerHTML = '';
       };
 
-      // ── Status dot helper ──────────────────────────────────────────────────
-      function setStatus(dotId, statusId, state, text) {
-        const dot = document.getElementById(dotId);
-        const val = document.getElementById(statusId);
-        const colorMap = { online: 'green', offline: 'red', checking: 'gray' };
-        dot.className = `status-dot ${colorMap[state] || 'gray'}`;
-        val.className = `status-value ${state === 'online' ? 'online' : state === 'offline' ? 'offline' : ''}`;
+      // ── Status dot helper (state: online | offline | checking) ─────────────
+      function setStatus(name, state, text) {
+        document.getElementById(`dot-${name}`).className = `status-dot ${state}`;
+        const val = document.getElementById(`status-${name}`);
+        val.className = `status-value ${state}`;
         val.textContent = text;
       }
 
       // ── Backend health check ───────────────────────────────────────────────
       async function checkHealth() {
-        setStatus('dot-backend', 'status-backend', 'checking', 'Checking...');
+        setStatus('backend', 'checking', 'Checking...');
         try {
           const t0 = performance.now();
           const res = await fetch('/api/health');
           const ms = Math.round(performance.now() - t0);
           if (res.ok) {
-            setStatus('dot-backend', 'status-backend', 'online', `Online · ${ms}ms`);
+            setStatus('backend', 'online', `Online · ${ms}ms`);
             log(`Backend API online · ${ms}ms`, 'ok');
           } else {
             throw new Error(`HTTP ${res.status}`);
           }
         } catch (err) {
-          setStatus('dot-backend', 'status-backend', 'offline', 'Offline');
+          setStatus('backend', 'offline', 'Offline');
           log(`Backend API offline: ${err.message}`, 'error');
         }
       }
 
       // ── Prometheus + Grafana status via /api/status ────────────────────────
+      const SERVICES = ['prometheus', 'grafana'];
+
       async function checkServiceStatus() {
         try {
           const res = await fetch('/api/status');
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
 
-          const prom = data.prometheus;
-          if (prom && prom.status === 'online') {
-            setStatus('dot-prometheus', 'status-prometheus', 'online', `Online · ${prom.ms}ms`);
-          } else {
-            setStatus('dot-prometheus', 'status-prometheus', 'offline', 'Offline');
-          }
-
-          const graf = data.grafana;
-          if (graf && graf.status === 'online') {
-            setStatus('dot-grafana', 'status-grafana', 'online', `Online · ${graf.ms}ms`);
-          } else {
-            setStatus('dot-grafana', 'status-grafana', 'offline', 'Offline');
-          }
+          SERVICES.forEach(name => {
+            const svc = data[name];
+            if (svc && svc.status === 'online') {
+              setStatus(name, 'online', `Online · ${svc.ms}ms`);
+            } else {
+              setStatus(name, 'offline', 'Offline');
+            }
+          });
         } catch (err) {
-          setStatus('dot-prometheus', 'status-prometheus', 'offline', 'Offline');
-          setStatus('dot-grafana', 'status-grafana', 'offline', 'Offline');
+          SERVICES.forEach(name => setStatus(name, 'offline', 'Offline'));
           log(`Service status check failed: ${err.message}`, 'error');
         }
       }
@@ -940,97 +838,92 @@
         try {
           const res  = await fetch('/api/info');
           const data = await res.json();
+          const uptime = formatUptime(data.uptime_seconds);
 
-          document.getElementById('info-node').textContent =
-            data.go || data.node || '—';
-          document.getElementById('info-uptime').textContent =
-            data.uptime_seconds != null ? formatUptime(data.uptime_seconds) : '—';
-          document.getElementById('info-time').textContent =
-            data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : '—';
+          document.getElementById('info-runtime').textContent = data.go;
+          document.getElementById('info-uptime').textContent = uptime;
+          document.getElementById('info-time').textContent = new Date(data.timestamp).toLocaleTimeString();
+          document.getElementById('info-env').textContent = data.environment;
 
-          const envEl = document.getElementById('info-env');
-          if (envEl) {
-            envEl.textContent = capitalize(data.environment) || '—';
-          }
-
-          const up = data.uptime_seconds != null ? ` · Uptime ${formatUptime(data.uptime_seconds)}` : '';
-          log(`System info loaded · ${data.go || data.node || '?'}${up}`, 'ok');
+          log(`System info loaded · ${data.go} · Uptime ${uptime}`, 'ok');
         } catch (err) {
-          ['info-node', 'info-uptime', 'info-time', 'info-env'].forEach(id => {
+          ['info-runtime', 'info-uptime', 'info-time', 'info-env'].forEach(id => {
             const el = document.getElementById(id);
-            if (el) { el.textContent = 'Unavailable'; el.className = 'info-value unavailable'; }
+            el.textContent = 'Unavailable';
+            el.className = 'info-value unavailable';
           });
           log(`System info failed: ${err.message}`, 'error');
         }
       }
 
-      // ── Endpoint execution ─────────────────────────────────────────────────
-      const BTN_IDS = {
-        '/api/health':  'btn-health',
-        '/api/cpu':     'btn-cpu',
-        '/api/memory':  'btn-memory',
-        '/api/slow':    'btn-slow',
-        '/api/metrics': 'btn-metrics',
-      };
+      // ── Endpoint testing ───────────────────────────────────────────────────
+      const ENDPOINTS = [
+        { label: 'Health Check',    path: '/api/health'  },
+        { label: 'CPU Stress Test', path: '/api/cpu'     },
+        { label: 'Memory Test',     path: '/api/memory'  },
+        { label: 'Slow Endpoint',   path: '/api/slow'    },
+        { label: 'Metrics',         path: '/api/metrics' },
+      ];
 
-      window.executeEndpoint = async function(label, path) {
-        const btnId  = BTN_IDS[path];
-        const btn    = document.getElementById(btnId);
-        const panel  = document.getElementById(`resp-${btnId}`);
-        const meta   = document.getElementById(`resp-meta-${btnId}`);
-        const body   = document.getElementById(`resp-body-${btnId}`);
-        if (!btn || btn.disabled) return;
+      const endpointCard = document.getElementById('endpoints');
+      ENDPOINTS.forEach(ep => {
+        endpointCard.insertAdjacentHTML('beforeend', `
+          <button class="endpoint-btn">
+            <div class="btn-left">
+              <span class="btn-label">${ep.label}</span>
+              <span class="btn-path">GET ${ep.path}</span>
+            </div>
+            <div class="btn-right">
+              <div class="spinner"></div>
+              <span class="run-label">Run ▶</span>
+            </div>
+          </button>
+          <div class="endpoint-response">
+            <div class="response-header"><span class="response-label">Response</span></div>
+            <div class="response-body"></div>
+          </div>`);
+        const panel = endpointCard.lastElementChild;
+        const btn   = panel.previousElementSibling;
+        btn.addEventListener('click', () => executeEndpoint(ep, btn, panel));
+      });
+
+      async function executeEndpoint({ label, path }, btn, panel) {
+        const meta = panel.querySelector('.response-label');
+        const body = panel.querySelector('.response-body');
 
         btn.disabled = true;
         btn.classList.add('loading');
-        if (panel) panel.classList.remove('visible');
+        panel.classList.remove('visible');
 
         log(`Running ${label}...`, 'info');
 
         const t0 = performance.now();
         try {
-          const res = await fetch(path);
-          const ms  = Math.round(performance.now() - t0);
+          const res  = await fetch(path);
+          const ms   = Math.round(performance.now() - t0);
+          const text = path === '/api/metrics'
+            ? await res.text()
+            : JSON.stringify(await res.json(), null, 2);
+          const lines = text.split('\n');
 
-          if (path === '/api/metrics') {
-            const text  = await res.text();
-            const lines = text.split('\n');
-            log(`${label} completed in ${ms}ms`, 'ok');
-            lines.slice(0, 40).forEach(l => log(l, 'data'));
-            if (lines.length > 40) log(`... [truncated, ${lines.length} lines total]`, 'info');
+          log(`${label} completed in ${ms}ms`, 'ok');
+          lines.slice(0, 40).forEach(l => log(l, 'data'));
+          if (lines.length > 40) log(`... [truncated, ${lines.length} lines total]`, 'info');
 
-            if (panel && meta && body) {
-              meta.innerHTML = `Response <span class="response-ms${ms > 1000 ? ' slow' : ''}">${ms}ms</span>`;
-              body.className = 'response-body';
-              body.textContent = lines.slice(0, 20).join('\n') + (lines.length > 20 ? '\n... [truncated]' : '');
-              panel.classList.add('visible');
-            }
-          } else {
-            const data   = await res.json();
-            const pretty = JSON.stringify(data, null, 2);
-            log(`${label} completed in ${ms}ms`, 'ok');
-            pretty.split('\n').forEach(l => log(l, 'data'));
-
-            if (panel && meta && body) {
-              meta.innerHTML = `Response <span class="response-ms${ms > 1000 ? ' slow' : ''}">${ms}ms</span>`;
-              body.className = 'response-body';
-              body.textContent = pretty;
-              panel.classList.add('visible');
-            }
-          }
+          meta.innerHTML = `Response <span class="response-ms${ms > 1000 ? ' slow' : ''}">${ms}ms</span>`;
+          body.className = 'response-body';
+          body.textContent = lines.slice(0, 20).join('\n') + (lines.length > 20 ? '\n... [truncated]' : '');
         } catch (err) {
           log(`${label} failed: ${err.message}`, 'error');
-          if (panel && meta && body) {
-            meta.innerHTML = 'Response <span style="color:var(--danger)">Error</span>';
-            body.className = 'response-body error';
-            body.textContent = err.message;
-            panel.classList.add('visible');
-          }
+          meta.innerHTML = 'Response <span style="color:var(--danger)">Error</span>';
+          body.className = 'response-body error';
+          body.textContent = err.message;
         } finally {
+          panel.classList.add('visible');
           btn.disabled = false;
           btn.classList.remove('loading');
         }
-      };
+      }
 
       // ── Init ───────────────────────────────────────────────────────────────
       log('LoadLab dashboard initialized', 'info');

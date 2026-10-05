@@ -15,8 +15,10 @@ export const options = {
   },
 };
 
+const BASE_URL = __ENV.BASE_URL || "http://localhost";
+
 export default function () {
-  const res = http.get("http://YOUR_SERVER_IP/cpu", {
+  const res = http.get(`${BASE_URL}/api/cpu`, {
     timeout: "30s",
   });
 

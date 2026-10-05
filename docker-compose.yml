@@ -1,7 +1,6 @@
 services:
   nginx:
     image: nginx:latest
-    container_name: loadlab-nginx
     ports:
       - "80:80"
     volumes:
@@ -12,17 +11,11 @@ services:
 
   backend:
     build: ./backend
-    container_name: loadlab-backend
-    ports:
-      - "3000:3000"
     environment:
       - APP_ENV=production
 
   prometheus:
     image: prom/prometheus
-    container_name: loadlab-prometheus
-    ports:
-      - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
@@ -32,9 +25,6 @@ services:
 
   grafana:
     image: grafana/grafana-oss
-    container_name: loadlab-grafana
-    ports:
-      - "3003:3000"
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
@@ -47,9 +37,6 @@ services:
 
   node-exporter:
     image: prom/node-exporter
-    container_name: loadlab-node-exporter
-    ports:
-      - "9100:9100"
 
 volumes:
   grafana-data:

@@ -17,8 +17,12 @@ export const options = {
   },
 };
 
+// Generic ramp to 100 VUs against one route: k6 run -e ROUTE=cpu k6/load-test.js
+const BASE_URL = __ENV.BASE_URL || 'http://localhost';
+const ROUTE = __ENV.ROUTE || 'health';
+
 export default function () {
-  const res = http.get('http://43.204.103.85/api/memory');
+  const res = http.get(`${BASE_URL}/api/${ROUTE}`);
 
   check(res, {
     'status is 200': (r) => r.status === 200,

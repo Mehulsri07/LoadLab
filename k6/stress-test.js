@@ -1,6 +1,5 @@
 import http from "k6/http";
-import { check, sleep } from "k6";
-import { randomItem } from "https://jslib.k6.io/k6-utils/1.4.0/index.js";
+import { check } from "k6";
 
 // Stress test: hammer all endpoints simultaneously to find the breaking point
 export const options = {
@@ -18,17 +17,17 @@ export const options = {
   },
 };
 
-const BASE_URL = "http://YOUR_SERVER_IP";
+const BASE_URL = __ENV.BASE_URL || "http://localhost";
 
 const ENDPOINTS = [
-  `${BASE_URL}/health`,
-  `${BASE_URL}/memory`,
-  `${BASE_URL}/slow`,
-  `${BASE_URL}/cpu`,
+  `${BASE_URL}/api/health`,
+  `${BASE_URL}/api/memory`,
+  `${BASE_URL}/api/slow`,
+  `${BASE_URL}/api/cpu`,
 ];
 
 export default function () {
-  const url = randomItem(ENDPOINTS);
+  const url = ENDPOINTS[Math.floor(Math.random() * ENDPOINTS.length)];
   const res = http.get(url, { timeout: "35s" });
 
   check(res, {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -18,7 +19,7 @@ var startTime = time.Now()
 
 // --- Metrics ---
 
-var requestCounter = prometheus.NewCounterVec(
+var requestCounter = promauto.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "http_requests_total",
 		Help: "Total number of HTTP requests",
@@ -26,7 +27,7 @@ var requestCounter = prometheus.NewCounterVec(
 	[]string{"route", "status"},
 )
 
-var requestDuration = prometheus.NewHistogramVec(
+var requestDuration = promauto.NewHistogramVec(
 	prometheus.HistogramOpts{
 		Name:    "http_request_duration_seconds",
 		Help:    "Duration of HTTP requests in seconds",
@@ -34,11 +35,6 @@ var requestDuration = prometheus.NewHistogramVec(
 	},
 	[]string{"route"},
 )
-
-func init() {
-	prometheus.MustRegister(requestCounter)
-	prometheus.MustRegister(requestDuration)
-}
 
 // --- Middleware: track duration for all routes ---
 
@@ -144,6 +140,8 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+var probeClient = &http.Client{Timeout: 3 * time.Second}
+
 // Service health status — pings Prometheus and Grafana from inside Docker network
 func statusHandler(w http.ResponseWriter, r *http.Request) {
 	type result struct {
@@ -153,22 +151,21 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	probe := func(url string) result {
 		t0 := time.Now()
-		client := &http.Client{Timeout: 3 * time.Second}
-		resp, err := client.Get(url)
+		resp, err := probeClient.Get(url)
 		ms := int(time.Since(t0).Milliseconds())
-		if err != nil || resp.StatusCode >= 500 {
+		if err != nil {
+			return result{Status: "offline", Ms: ms}
+		}
+		resp.Body.Close()
+		if resp.StatusCode >= 500 {
 			return result{Status: "offline", Ms: ms}
 		}
 		return result{Status: "online", Ms: ms}
 	}
 
-	promResult := probe("http://prometheus:9090/-/healthy")
-	grafResult := probe("http://grafana:3000/api/health")
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"prometheus": promResult,
-		"grafana":    grafResult,
+	writeJSON(w, map[string]any{
+		"prometheus": probe("http://prometheus:9090/-/healthy"),
+		"grafana":    probe("http://grafana:3000/api/health"),
 	})
 }
 

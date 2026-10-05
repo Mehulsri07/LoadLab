@@ -12,8 +12,10 @@ export const options = {
   },
 };
 
+const BASE_URL = __ENV.BASE_URL || "http://localhost";
+
 export default function () {
-  const res = http.get("http://YOUR_SERVER_IP/health");
+  const res = http.get(`${BASE_URL}/api/health`);
 
   check(res, {
     "status is 200": (r) => r.status === 200,
