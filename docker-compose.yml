@@ -8,11 +8,17 @@ services:
       - ./frontend:/usr/share/nginx/html
     depends_on:
       - backend
+    cpus: 0.5
+    mem_limit: 128m
 
   backend:
     build: ./backend
     environment:
       - APP_ENV=production
+    # Limits are what the load tests push against; restart brings it back after an OOM kill
+    cpus: 1.0
+    mem_limit: 512m
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus
@@ -22,6 +28,8 @@ services:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.external-url=/prometheus/"
       - "--web.route-prefix=/"
+    cpus: 0.5
+    mem_limit: 384m
 
   grafana:
     image: grafana/grafana-oss
@@ -32,11 +40,18 @@ services:
       - GF_SERVER_ROOT_URL=http://43.204.103.85/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_SERVER_ENABLE_GZIP=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/loadlab.json
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    cpus: 0.5
+    mem_limit: 512m
 
   node-exporter:
     image: prom/node-exporter
+    cpus: 0.25
+    mem_limit: 64m
 
 volumes:
   grafana-data:
