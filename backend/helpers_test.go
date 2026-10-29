@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"slices"
 	"testing"
 
@@ -57,4 +59,10 @@ func assertBuckets(t *testing.T, reg *prometheus.Registry, name string, want []f
 func gaugeValue(t *testing.T, reg *prometheus.Registry, name string, labels map[string]string) float64 {
 	t.Helper()
 	return findMetric(t, reg, name, labels).GetGauge().GetValue()
+}
+
+func code(h http.HandlerFunc) int {
+	rec := httptest.NewRecorder()
+	h(rec, httptest.NewRequest("GET", "/", nil))
+	return rec.Code
 }
