@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"slices"
@@ -104,4 +105,23 @@ func waitFor(t *testing.T, cond func() bool) {
 		}
 	}
 	t.Fatal("condition not met within 2s")
+}
+
+func listen(t *testing.T) net.Listener {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { ln.Close() })
+	return ln
+}
+
+// waitListening waits until Run has marked h ready, then returns srv's base URL.
+// Run stores the bound address into srv.Addr before the atomic SetReady, so the
+// read below happens-after the write.
+func waitListening(t *testing.T, h *Health, srv *http.Server) string {
+	t.Helper()
+	waitFor(t, func() bool { return code(h.Ready) == http.StatusOK })
+	return "http://" + srv.Addr
 }
