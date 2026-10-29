@@ -25,6 +25,7 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
+	calibrateCPU() // before serving, so the first request is not slowed
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	err := Run(ctx, cfg, &health, public, admin, log.Printf)
 	stop()

@@ -48,22 +48,51 @@ func (h *Health) Ready(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// burnCPU spins for d, checking for cancellation every millisecond.
-func burnCPU(ctx context.Context, d time.Duration) error {
-	end := time.Now().Add(d)
-	next := time.Now().Add(time.Millisecond)
-	for {
-		now := time.Now()
-		if !now.Before(end) {
-			return nil
-		}
-		if !now.Before(next) {
-			if err := ctx.Err(); err != nil {
-				return err
-			}
-			next = now.Add(time.Millisecond)
-		}
+var (
+	cpuSink    uint64 // keeps the compiler from eliminating mix
+	calibrate  sync.Once
+	itersPerNs float64
+)
+
+// mix runs n xorshift iterations: a fixed unit of CPU work.
+func mix(n int64) {
+	x := cpuSink | 1
+	for range n {
+		x ^= x << 13
+		x ^= x >> 7
+		x ^= x << 17
 	}
+	cpuSink = x
+}
+
+// calibrateCPU measures mix's speed once, for about 50ms.
+// ponytail: calibrated on an idle core; if startup is contended, per-request cost is underestimated.
+func calibrateCPU() {
+	calibrate.Do(func() {
+		var n int64
+		t0 := time.Now()
+		for time.Since(t0) < 50*time.Millisecond {
+			mix(10_000)
+			n += 10_000
+		}
+		itersPerNs = float64(n) / float64(time.Since(t0))
+	})
+}
+
+// burnCPU does d worth of calibrated CPU work, checking for cancellation about every millisecond.
+func burnCPU(ctx context.Context, d time.Duration) error {
+	calibrateCPU()
+	left := int64(float64(d) * itersPerNs)
+	chunk := max(int64(itersPerNs*float64(time.Millisecond)), 1)
+	for left > 0 {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		k := min(chunk, left)
+		mix(k)
+		left -= k
+	}
+	return nil
 }
 
 // Work costs real CPU then holds the request open, like a request awaiting a dependency.

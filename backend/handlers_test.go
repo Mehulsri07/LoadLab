@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
+	"sync"
 	"testing"
 	"time"
 )
@@ -16,7 +18,7 @@ func TestWork_SpendsCPUThenWaits(t *testing.T) {
 	t0 := time.Now()
 	Work(cfg)(rec, httptest.NewRequest("GET", "/work", nil))
 	assertEq(t, rec.Code, 200)
-	if d := time.Since(t0); d < 50*time.Millisecond || d > 250*time.Millisecond {
+	if d := time.Since(t0); d < 45*time.Millisecond || d > 250*time.Millisecond { // calibrated CPU cost jitters a few %
 		t.Fatalf("took %v", d)
 	}
 }
@@ -35,6 +37,26 @@ func TestBurnCPU_StopsOnCancel(t *testing.T) {
 	err := burnCPU(ctx, 5*time.Second)
 	if !errors.Is(err, context.DeadlineExceeded) || time.Since(t0) > 100*time.Millisecond {
 		t.Fatalf("err=%v after %v", err, time.Since(t0))
+	}
+}
+
+func TestBurnCPU_FixedWorkUnderContention(t *testing.T) {
+	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(1))
+	var wg sync.WaitGroup
+	t0 := time.Now()
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := burnCPU(context.Background(), 30*time.Millisecond); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+	// Two 30ms CPU jobs sharing one P need ~60ms of wall time.
+	if d := time.Since(t0); d < 50*time.Millisecond {
+		t.Fatalf("two 30ms burns on one P finished in %v; want >= 50ms", d)
 	}
 }
 
