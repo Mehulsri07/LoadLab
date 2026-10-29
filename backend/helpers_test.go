@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
@@ -65,4 +67,41 @@ func code(h http.HandlerFunc) int {
 	rec := httptest.NewRecorder()
 	h(rec, httptest.NewRequest("GET", "/", nil))
 	return rec.Code
+}
+
+func serve(h http.Handler, path string) *httptest.ResponseRecorder {
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+	return rec
+}
+
+// serveCancelled sends a request whose context is already cancelled, so slow handlers return at once.
+func serveCancelled(h http.Handler, path string) *httptest.ResponseRecorder {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest("GET", path, nil).WithContext(ctx))
+	return rec
+}
+
+func get(h http.Handler, path string) *httptest.ResponseRecorder { return serve(h, path) }
+
+func post(h http.Handler, path string) *httptest.ResponseRecorder {
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, httptest.NewRequest("POST", path, nil))
+	return rec
+}
+
+func ok200() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+}
+
+func waitFor(t *testing.T, cond func() bool) {
+	t.Helper()
+	for end := time.Now().Add(2 * time.Second); time.Now().Before(end); time.Sleep(5 * time.Millisecond) {
+		if cond() {
+			return
+		}
+	}
+	t.Fatal("condition not met within 2s")
 }
