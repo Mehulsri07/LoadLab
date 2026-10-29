@@ -3,63 +3,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"os"
 	"runtime"
-	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var startTime = time.Now()
-
-// --- Metrics ---
-
-var requestCounter = promauto.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "http_requests_total",
-		Help: "Total number of HTTP requests",
-	},
-	[]string{"route", "status"},
-)
-
-var requestDuration = promauto.NewHistogramVec(
-	prometheus.HistogramOpts{
-		Name:    "http_request_duration_seconds",
-		Help:    "Duration of HTTP requests in seconds",
-		Buckets: []float64{0.05, 0.1, 0.3, 0.5, 1, 2, 5, 10},
-	},
-	[]string{"route"},
-)
-
-// --- Middleware: track duration for all routes ---
-
-func instrumentHandler(route string, handler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		timer := prometheus.NewTimer(requestDuration.WithLabelValues(route))
-		defer timer.ObserveDuration()
-
-		rec := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
-		handler(rec, r)
-
-		requestCounter.WithLabelValues(route, strconv.Itoa(rec.statusCode)).Inc()
-	}
-}
-
-// statusRecorder wraps http.ResponseWriter to capture the status code.
-type statusRecorder struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (r *statusRecorder) WriteHeader(code int) {
-	r.statusCode = code
-	r.ResponseWriter.WriteHeader(code)
-}
 
 // --- Helpers ---
 
@@ -172,6 +127,8 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 // --- Start ---
 
 func main() {
+	m := NewMetrics(prometheus.DefaultRegisterer, LoadConfig(os.Getenv, log.Printf).Version) // temporary wiring until Task 4
+	instrumentHandler := m.Instrument
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", instrumentHandler("/health", healthHandler))
