@@ -1,0 +1,49 @@
+{
+  "rps_per_pod": 70,
+  "slo_ms": 200,
+  "image": "loadlab-backend:local",
+  "levels": [
+    {
+      "rps": 10,
+      "p95_ms": 53.14,
+      "failed_rate": 0
+    },
+    {
+      "rps": 20,
+      "p95_ms": 52.77,
+      "failed_rate": 0
+    },
+    {
+      "rps": 30,
+      "p95_ms": 52.83,
+      "failed_rate": 0
+    },
+    {
+      "rps": 40,
+      "p95_ms": 52.71,
+      "failed_rate": 0
+    },
+    {
+      "rps": 50,
+      "p95_ms": 52.72,
+      "failed_rate": 0
+    },
+    {
+      "rps": 60,
+      "p95_ms": 64.94,
+      "failed_rate": 0
+    },
+    {
+      "rps": 70,
+      "p95_ms": 84.42,
+      "failed_rate": 0
+    },
+    {
+      "rps": 80,
+      "p95_ms": 202.86,
+      "failed_rate": 0
+    }
+  ],
+  "measured_at": "2026-10-29T13:11:31+00:00",
+  "step_duration_s": 60
+}
