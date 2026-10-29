@@ -49,20 +49,20 @@ func (h *Health) Ready(w http.ResponseWriter, r *http.Request) {
 }
 
 var (
-	cpuSink    uint64 // keeps the compiler from eliminating mix
+	cpuSink    atomic.Uint64 // keeps the compiler from eliminating mix; atomic because requests run concurrently
 	calibrate  sync.Once
 	itersPerNs float64
 )
 
 // mix runs n xorshift iterations: a fixed unit of CPU work.
 func mix(n int64) {
-	x := cpuSink | 1
+	x := cpuSink.Load() | 1
 	for range n {
 		x ^= x << 13
 		x ^= x >> 7
 		x ^= x << 17
 	}
-	cpuSink = x
+	cpuSink.Store(x)
 }
 
 // calibrateCPU measures mix's speed once, for about 50ms.
