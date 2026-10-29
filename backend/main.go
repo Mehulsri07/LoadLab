@@ -12,6 +12,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// buildVersion is set at link time with -X main.buildVersion=...; APP_VERSION overrides it.
+var buildVersion = "dev"
+
 func main() {
 	cfg := LoadConfig(os.Getenv, log.Printf)
 	var health Health

@@ -53,7 +53,7 @@ func LoadConfig(getenv func(string) string, logf func(string, ...any)) Config {
 		},
 	}
 	if c.Version == "" {
-		c.Version = "dev"
+		c.Version = buildVersion
 	}
 	if s := getenv("STATUS_TARGETS"); s != "" {
 		c.StatusTargets = map[string]string{}
