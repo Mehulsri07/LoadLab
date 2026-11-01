@@ -1,0 +1,26 @@
+name: backend
+
+on:
+  push:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - run: go vet ./...
+      - run: go test -race -count=1 ./...
+      - name: Build images (no push)
+        run: |
+          docker build -t loadlab-backend:ci --build-arg VERSION=${GITHUB_SHA::7} .
+          docker build -t loadlab-backend:bad --build-arg VERSION=bad --build-arg FAULT_LATENCY_MS=300 --build-arg FAULT_ERROR_RATE=0.1 .

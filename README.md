@@ -85,13 +85,49 @@ All routes are reached through Nginx under `/api/`.
 
 | Route | What it does | What it stresses |
 |---|---|---|
+| `GET /api/work` | Burns `WORK_CPU_MS` of CPU, then waits `WORK_DURATION_MS`; cancelled after `WORK_TIMEOUT_MS` | A realistic mixed request; the autoscaling target |
 | `GET /api/health` | Returns `{"status":"ok"}` | Nothing; the baseline |
+| `GET /api/livez` | Liveness probe | — |
+| `GET /api/readyz` | Readiness probe; fails while the server drains on shutdown | — |
 | `GET /api/cpu` | Counts primes up to 1,000,000 by trial division | One CPU core per request |
 | `GET /api/memory` | Allocates a slice of 1,000,000 structs | Heap and garbage collector |
 | `GET /api/slow` | Sleeps for 3 seconds | Open connections and goroutines |
 | `GET /api/info` | Go version, uptime, environment | — |
 | `GET /api/status` | Probes Prometheus and Grafana from inside the Docker network | — |
 | `GET /api/metrics` | Prometheus metrics: request count and latency histogram per route | — |
+
+### Admin port (internal only)
+
+The backend also listens on `:9091` for fault switches. It is not published by Compose and must never be exposed publicly; the same paths on `:3000` return 404.
+
+| Route | What it does |
+|---|---|
+| `POST /admin/leak?mb_per_min=N` | Starts leaking N MiB of memory per minute |
+| `POST /admin/leak/stop` | Stops the leak |
+
+### Configuration
+
+| Env var | Default | Meaning |
+|---|---|---|
+| `WORK_CPU_MS` | 20 | CPU time burned per `/work` request (0–1000) |
+| `WORK_DURATION_MS` | 30 | Wait time per `/work` request (0–10000) |
+| `WORK_TIMEOUT_MS` | 5000 | `/work` deadline (100–30000) |
+| `FAULT_LATENCY_MS` | 0 | Extra latency per request, except probes, `/health` and `/metrics` (0–10000) |
+| `FAULT_ERROR_RATE` | 0 | Fraction of those requests answered with 500 (0–1) |
+| `APP_VERSION` | build version | Version reported by `/info` and metrics |
+| `SHUTDOWN_DRAIN_S` | 20 | Seconds to drain in-flight requests on SIGTERM (1–25) |
+| `STATUS_TARGETS` | Prometheus and Grafana | `name=url,...` probed by `/status` |
+
+Invalid values fall back to the default with a warning; values above the range are clamped.
+
+### Images
+
+The backend image is a static binary on distroless, running as non-root. The `:bad` image is the same code with faults baked in, for testing rollbacks:
+
+```bash
+docker build -t loadlab-backend:local --build-arg VERSION=local backend
+docker build -t loadlab-backend:bad --build-arg VERSION=bad --build-arg FAULT_LATENCY_MS=300 --build-arg FAULT_ERROR_RATE=0.1 backend
+```
 
 ## Load tests
 
