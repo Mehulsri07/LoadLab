@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand/v2"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -25,13 +26,14 @@ func PublicMux(cfg Config, m *Metrics, h *Health, start time.Time) http.Handler 
 	}
 	mux := http.NewServeMux()
 	for route, fn := range routes {
-		mux.HandleFunc(route, m.Instrument(route, fn))
+		mux.HandleFunc(route, m.Instrument(route, FaultMiddleware(cfg, rand.Float64, fn).ServeHTTP))
 	}
-	return FaultMiddleware(cfg, rand.Float64, mux)
+	return mux
 }
 
 // AdminMux is the internal-only listener: the memory-leak switch.
 func AdminMux(l *Leaker) http.Handler {
+	pod, _ := os.Hostname()
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /admin/leak", func(w http.ResponseWriter, r *http.Request) {
 		n, err := strconv.Atoi(r.URL.Query().Get("mb_per_min"))
@@ -43,12 +45,12 @@ func AdminMux(l *Leaker) http.Handler {
 		n = min(n, 200)
 		l.Start(n)
 		w.WriteHeader(http.StatusAccepted)
-		writeJSON(w, map[string]int{"mb_per_min": n})
+		writeJSON(w, map[string]any{"mb_per_min": n, "pod": pod})
 	})
 	mux.HandleFunc("POST /admin/leak/stop", func(w http.ResponseWriter, r *http.Request) {
 		l.Stop()
 		w.WriteHeader(http.StatusAccepted)
-		writeJSON(w, map[string]string{"status": "stopped"})
+		writeJSON(w, map[string]string{"status": "stopped", "pod": pod})
 	})
 	return mux
 }

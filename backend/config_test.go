@@ -20,15 +20,16 @@ func TestLoadConfig_Defaults(t *testing.T) {
 }
 
 func TestLoadConfig_ClampsAndFallsBack(t *testing.T) {
-	env := map[string]string{"WORK_CPU_MS": "-5", "WORK_DURATION_MS": "abc", "FAULT_ERROR_RATE": "1.5", "FAULT_LATENCY_MS": "999999"}
+	env := map[string]string{"WORK_CPU_MS": "-5", "WORK_DURATION_MS": "abc", "FAULT_ERROR_RATE": "1.5", "FAULT_LATENCY_MS": "999999", "WORK_TIMEOUT_MS": "NaN"}
 	var logged []string
 	c := LoadConfig(func(k string) string { return env[k] }, func(f string, a ...any) { logged = append(logged, fmt.Sprintf(f, a...)) })
 	assertEq(t, c.WorkCPU, 20*time.Millisecond)  // negative -> default
 	assertEq(t, c.WorkWait, 30*time.Millisecond) // unparsable -> default
 	assertEq(t, c.FaultErrorRate, 1.0)           // clamped to [0,1]
 	assertEq(t, c.FaultLatency, 10*time.Second)  // clamped to 10 s
-	if len(logged) != 4 {
-		t.Fatalf("want 4 warnings, got %v", logged)
+	assertEq(t, c.WorkTimeout, 5*time.Second)    // NaN -> default
+	if len(logged) != 5 {
+		t.Fatalf("want 5 warnings, got %v", logged)
 	}
 }
 

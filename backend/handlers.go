@@ -65,17 +65,20 @@ func mix(n int64) {
 	cpuSink.Store(x)
 }
 
-// calibrateCPU measures mix's speed once, for about 50ms.
-// ponytail: calibrated on an idle core; if startup is contended, per-request cost is underestimated.
+// calibrateCPU measures mix's speed once: the fastest of 10 windows of 5ms, so a
+// busy node at scale-up still calibrates close to its uncontended speed.
+// ponytail: if all 10 windows are contended, per-request cost is still underestimated.
 func calibrateCPU() {
 	calibrate.Do(func() {
-		var n int64
-		t0 := time.Now()
-		for time.Since(t0) < 50*time.Millisecond {
-			mix(10_000)
-			n += 10_000
+		for range 10 {
+			var n int64
+			t0 := time.Now()
+			for time.Since(t0) < 5*time.Millisecond {
+				mix(10_000)
+				n += 10_000
+			}
+			itersPerNs = max(itersPerNs, float64(n)/float64(time.Since(t0)))
 		}
-		itersPerNs = float64(n) / float64(time.Since(t0))
 	})
 }
 

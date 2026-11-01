@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -26,7 +27,7 @@ func LoadConfig(getenv func(string) string, logf func(string, ...any)) Config {
 		}
 		v, err := strconv.ParseFloat(s, 64)
 		switch {
-		case err != nil || v < lo:
+		case err != nil || math.IsNaN(v) || v < lo:
 			logf("config: %s=%q invalid, using default %v", key, s, def)
 			return def
 		case v > hi:
