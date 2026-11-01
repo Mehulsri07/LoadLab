@@ -5,30 +5,30 @@
   "levels": [
     {
       "rps": 10,
-      "p95_ms": 54.08,
+      "p95_ms": 55.98,
       "failed_rate": 0
     },
     {
       "rps": 20,
-      "p95_ms": 54.81,
+      "p95_ms": 54.94,
       "failed_rate": 0
     },
     {
       "rps": 30,
-      "p95_ms": 54.5,
+      "p95_ms": 54.04,
       "failed_rate": 0
     },
     {
       "rps": 40,
-      "p95_ms": 53.62,
+      "p95_ms": 53.65,
       "failed_rate": 0
     },
     {
       "rps": 50,
-      "p95_ms": 10964.15,
-      "failed_rate": 0.0586
+      "p95_ms": 11491.61,
+      "failed_rate": 0.0543
     }
   ],
-  "measured_at": "2026-10-29T13:25:35+00:00",
+  "measured_at": "2026-11-01T06:09:54+00:00",
   "step_duration_s": 60
 }
